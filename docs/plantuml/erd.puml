@@ -1,0 +1,89 @@
+@startuml ERD - Team Kanban Database Schema
+
+!define primary_key(x) <b><u>x</u></b>
+!define foreign_key(x) <i>x</i>
+!define not_null(x) <b>x</b>
+
+' Styling
+skinparam linetype ortho
+skinparam backgroundColor white
+skinparam shadowing false
+
+entity "users" as users {
+  primary_key(user_id) : INT <<PK, AUTO_INCREMENT>>
+  --
+  not_null(username) : VARCHAR(50) <<UNIQUE>>
+  not_null(email) : VARCHAR(100) <<UNIQUE>>
+  not_null(password) : VARCHAR(255)
+  not_null(full_name) : VARCHAR(100)
+  avatar : VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+entity "projects" as projects {
+  primary_key(project_id) : INT <<PK, AUTO_INCREMENT>>
+  --
+  foreign_key(owner_id) : INT <<FK>>
+  not_null(project_name) : VARCHAR(100)
+  description : TEXT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "project_members" as project_members {
+  primary_key(member_id) : INT <<PK, AUTO_INCREMENT>>
+  --
+  foreign_key(project_id) : INT <<FK>>
+  foreign_key(user_id) : INT <<FK>>
+  not_null(role) : ENUM('owner', 'member')
+  joined_at : TIMESTAMP
+  ..
+  <<UNIQUE(project_id, user_id)>>
+}
+
+entity "tasks" as tasks {
+  primary_key(task_id) : INT <<PK, AUTO_INCREMENT>>
+  --
+  foreign_key(project_id) : INT <<FK>>
+  foreign_key(assigned_to) : INT <<FK, NULL>>
+  not_null(task_title) : VARCHAR(200)
+  description : TEXT
+  not_null(column_status) : ENUM('todo', 'in_progress', 'done')
+  priority : ENUM('low', 'medium', 'high')
+  due_date : DATE
+  attachment_path : VARCHAR(255)
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' Relationships
+users ||--o{ projects : "owns\n(owner_id)"
+users ||--o{ project_members : "joins"
+projects ||--o{ project_members : "has"
+users ||--o{ tasks : "assigned to\n(assigned_to)"
+projects ||--o{ tasks : "contains"
+
+' Notes
+note right of project_members
+  **Constraints:**
+  - Each user can join a project only once
+  - UNIQUE(project_id, user_id)
+  - Owner is also added to this table
+  with role='owner'
+end note
+
+note right of tasks
+  **Business Rules:**
+  - assigned_to can be NULL (unassigned)
+  - Members can claim unassigned tasks
+  - Only owner can delete tasks
+  - Members can only edit their own tasks
+end note
+
+note bottom of projects
+  **ON DELETE CASCADE:**
+  - Deleting project deletes all
+    tasks and project_members
+end note
+
+@enduml

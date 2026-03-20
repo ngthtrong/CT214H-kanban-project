@@ -1,0 +1,93 @@
+@startuml UC3 - Quản lý Members
+
+title UC3: Quản lý Members (Owner Only)
+
+|Owner|
+start
+:Mở project;
+
+switch (Chọn thao tác?)
+case (Mời member)
+  |#LightGreen|Mời Member|
+  :Click "Mời thành viên";
+
+  |System|
+  :Hiển thị modal form:\nNhập email hoặc username;
+
+  |Owner|
+  :Nhập email/username;
+  :Submit;
+
+  |System|
+  :Tìm kiếm user trong database;
+
+  if (User tồn tại?) then (yes)
+    if (User đã là member?) then (yes)
+      :Hiển thị lỗi\n"User đã tham gia project";
+      detach
+    else (no)
+      if (User là chính mình?) then (yes)
+        :Hiển thị lỗi\n"Bạn đã là owner";
+        detach
+      else (no)
+        :Thêm vào project_members\nwith role='member';
+        :Hiển thị thông báo thành công;
+        :User xuất hiện trong danh sách;
+        |Owner|
+        stop
+      endif
+    endif
+  else (no)
+    :Hiển thị lỗi\n"Không tìm thấy user";
+    detach
+  endif
+
+case (Xem members)
+  |#LightBlue|Xem Members|
+  :Click tab/icon "Members";
+
+  |System|
+  :Query danh sách members;
+  :Hiển thị danh sách với:\n- Avatar, tên, email\n- Vai trò (Owner/Member)\n- Ngày tham gia\n- Số tasks đang gán;
+
+  |Owner|
+  stop
+
+case (Xóa member)
+  |#Pink|Xóa Member|
+  :Click "Xóa" member;
+
+  if (Member là chính mình?) then (yes)
+    |System|
+    :Hiển thị lỗi\n"Không thể xóa chính mình";
+    detach
+  else (no)
+    |System|
+    :Hiển thị xác nhận:\n"Xóa member sẽ hủy gán\ntất cả tasks của họ. Tiếp tục?";
+
+    |Owner|
+    if (Xác nhận?) then (yes)
+      |System|
+      :Xóa member khỏi project_members;
+      :Set assigned_to = NULL\ncho tất cả tasks của member;
+      :Hiển thị thông báo thành công;
+      :Cập nhật danh sách;
+      |Owner|
+      stop
+    else (no)
+      :Hủy thao tác;
+      detach
+    endif
+  endif
+
+endswitch
+
+note right
+  **Authorization:**
+  - Chỉ Owner mới có thể
+    mời/xóa members
+  - Member không có quyền
+    quản lý members
+end note
+
+@enduml

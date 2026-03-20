@@ -1,0 +1,108 @@
+@startuml UC2 - Quản lý Project
+
+title UC2: Quản lý Project
+
+|User|
+start
+:Đăng nhập thành công;
+:Xem dashboard;
+
+switch (Chọn thao tác?)
+case (Tạo project mới)
+  |#LightGreen|Tạo Project|
+  :Click "Tạo Project mới";
+
+  |System|
+  :Hiển thị form:\n- Tên project (bắt buộc)\n- Mô tả (tùy chọn);
+
+  |User|
+  :Nhập thông tin;
+  :Submit form;
+
+  |System|
+  :Validate tên project;
+
+  if (Tên project hợp lệ?) then (yes)
+    :Tạo project mới;
+    :Thêm user vào project_members\nwith role='owner';
+    :Hiển thị thông báo thành công;
+    :Chuyển đến trang project;
+    |User|
+    stop
+  else (no)
+    :Hiển thị lỗi validation;
+    detach
+  endif
+
+case (Xem project)
+  |#LightBlue|Xem Project|
+  :Click vào project;
+
+  |System|
+  :Kiểm tra quyền\n(owner hoặc member);
+
+  if (Có quyền truy cập?) then (yes)
+    :Load project board\n(3 cột: To Do, In Progress, Done);
+    :Hiển thị tasks với avatar assignee;
+    |User|
+    :Xem và quản lý tasks;
+    stop
+  else (no)
+    :Hiển thị lỗi "Không có quyền";
+    detach
+  endif
+
+case (Sửa project)
+  |#Yellow|Sửa Project|
+  :Click "Chỉnh sửa" project;
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (User là owner?) then (yes)
+    :Hiển thị form với dữ liệu hiện tại;
+
+    |User|
+    :Chỉnh sửa tên/mô tả;
+    :Submit;
+
+    |System|
+    :Validate và cập nhật database;
+    :Hiển thị thông báo thành công;
+    stop
+  else (no)
+    :Hiển thị lỗi "Không có quyền";
+    detach
+  endif
+
+case (Xóa project)
+  |#Pink|Xóa Project|
+  :Click "Xóa" project;
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (User là owner?) then (yes)
+    :Hiển thị xác nhận:\n"Xóa project sẽ xóa tất cả\ntasks và members. Tiếp tục?";
+
+    |User|
+    if (Xác nhận xóa?) then (yes)
+      |System|
+      :Xóa project (CASCADE);
+      :Xóa tất cả tasks;
+      :Xóa tất cả members;
+      :Chuyển về dashboard;
+      |User|
+      stop
+    else (no)
+      :Hủy thao tác;
+      detach
+    endif
+  else (no)
+    :Hiển thị lỗi "Không có quyền";
+    detach
+  endif
+
+endswitch
+
+@enduml

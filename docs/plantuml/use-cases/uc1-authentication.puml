@@ -1,0 +1,64 @@
+@startuml UC1 - Đăng ký và Đăng nhập
+
+title UC1: Đăng ký và Đăng nhập
+
+|User|
+start
+:Truy cập trang chủ;
+
+if (Đã có tài khoản?) then (có)
+  |#LightBlue|Đăng nhập|
+  :Truy cập trang đăng nhập;
+  :Nhập username/email và password;
+
+  |System|
+  :Validate dữ liệu;
+
+  if (Thông tin đúng?) then (yes)
+    :Tạo session;
+    :Chuyển đến dashboard;
+    |User|
+    :Xem danh sách projects;
+    stop
+  else (no)
+    :Hiển thị lỗi\n"Sai username/password";
+    |User|
+    :Thử lại hoặc đăng ký;
+    detach
+  endif
+
+else (chưa)
+  |#LightGreen|Đăng ký|
+  :Truy cập trang đăng ký;
+  :Nhập thông tin:\n- Username\n- Email\n- Password\n- Full name;
+
+  |System|
+  :Validate dữ liệu (client-side);
+
+  if (Dữ liệu hợp lệ?) then (yes)
+    if (Username/Email đã tồn tại?) then (yes)
+      :Hiển thị lỗi\n"Username/Email đã được sử dụng";
+      |User|
+      detach
+    else (no)
+      if (Password đủ mạnh?) then (yes)
+        :Hash password (bcrypt);
+        :Lưu user vào database;
+        :Hiển thị thông báo\n"Đăng ký thành công";
+        |User|
+        :Chuyển đến trang đăng nhập;
+        detach
+      else (no)
+        :Hiển thị yêu cầu password\n(min 6 ký tự);
+        |User|
+        detach
+      endif
+    endif
+  else (no)
+    :Hiển thị lỗi validation;
+    |User|
+    detach
+  endif
+endif
+
+@enduml

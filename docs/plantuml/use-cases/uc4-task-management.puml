@@ -1,0 +1,136 @@
+@startuml UC4 - Quản lý Task
+
+title UC4: Quản lý Task
+
+|User|
+start
+:Mở project board;
+
+switch (Chọn thao tác?)
+case (Tạo task)
+  |#LightGreen|Tạo Task|
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (User là owner?) then (yes)
+    :Hiển thị modal form:\n- Tiêu đề (bắt buộc)\n- Mô tả\n- Assigned to (dropdown)\n- Priority (Low/Medium/High)\n- Due date\n- Upload file;
+
+    |Owner|
+    :Nhập thông tin task;
+    :Chọn member hoặc "Unassigned";
+    :Upload file (tùy chọn);
+    :Submit;
+
+    |System|
+    :Validate tiêu đề;
+
+    if (Tiêu đề hợp lệ?) then (yes)
+      if (Có file upload?) then (yes)
+        :Validate file (type, size);
+
+        if (File hợp lệ?) then (yes)
+          :Upload file vào /uploads/;
+          :Lưu path vào database;
+        else (no)
+          :Hiển thị lỗi file;
+          note right: Vẫn tạo task nhưng không có file
+        endif
+      endif
+
+      :Lưu task vào database;
+      :Task xuất hiện trong cột\nvới avatar assignee (nếu có);
+      |Owner|
+      stop
+    else (no)
+      :Hiển thị lỗi validation;
+      detach
+    endif
+  else (no)
+    :Hiển thị lỗi "Chỉ owner mới tạo task";
+    detach
+  endif
+
+case (Xem chi tiết task)
+  |#LightBlue|Xem Task|
+  :Click vào task card;
+
+  |System|
+  :Load chi tiết task:\n- Title, description\n- Status, priority, due_date\n- Assignee (avatar + tên)\n- File đính kèm\n- Created_at, updated_at;
+
+  |User|
+  stop
+
+case (Sửa task)
+  |#Yellow|Sửa Task|
+  :Click "Chỉnh sửa" task;
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (Owner hoặc assigned to me?) then (yes)
+    :Hiển thị form với dữ liệu hiện tại;
+
+    |User|
+    :Chỉnh sửa thông tin;
+    :Submit;
+
+    |System|
+    :Validate và cập nhật database;
+    :Hiển thị thông báo thành công;
+    stop
+  else (no)
+    :Hiển thị lỗi "Không có quyền";
+    detach
+  endif
+
+case (Xóa task)
+  |#Pink|Xóa Task|
+  :Click "Xóa" task;
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (User là owner?) then (yes)
+    :Hiển thị xác nhận;
+
+    |Owner|
+    if (Xác nhận xóa?) then (yes)
+      |System|
+      :Xóa task khỏi database;
+      :Xóa file đính kèm (nếu có);
+      :Hiển thị thông báo thành công;
+      stop
+    else (no)
+      :Hủy thao tác;
+      detach
+    endif
+  else (no)
+    :Hiển thị lỗi\n"Chỉ owner mới xóa task";
+    detach
+  endif
+
+case (Di chuyển task)
+  |#Orange|Drag & Drop|
+  :Kéo task card;
+
+  |System|
+  :Kiểm tra quyền;
+
+  if (Owner hoặc assigned to me?) then (yes)
+    |User|
+    :Thả vào cột khác;
+
+    |System|
+    :Cập nhật column_status\nbằng AJAX;
+    :Task xuất hiện ở vị trí mới;
+    stop
+  else (no)
+    :Không cho phép drag;
+    :Hiển thị tooltip\n"Chỉ di chuyển task của bạn";
+    detach
+  endif
+
+endswitch
+
+@enduml

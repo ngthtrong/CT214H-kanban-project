@@ -1,0 +1,116 @@
+@startuml UC6 - Tìm kiếm và Lọc Task
+
+title UC6: Tìm kiếm và Lọc Task
+
+|User|
+start
+:Mở dashboard hoặc project board;
+
+switch (Chọn chức năng?)
+case (Tìm kiếm)
+  |#LightGreen|Tìm kiếm|
+  :Nhập từ khóa vào ô search;
+
+  |System|
+  :Tìm kiếm real-time (AJAX)\ntrong task_title và description\n(LIKE %keyword%);
+
+  if (Có kết quả?) then (yes)
+    if (Kết quả > 10 tasks?) then (yes)
+      :Hiển thị 10 kết quả đầu;
+      :Hiển thị pagination;
+
+      |User|
+      :Click số trang để xem thêm;
+      stop
+    else (no - kết quả ≤ 10)
+      :Hiển thị tất cả kết quả;
+      stop
+    endif
+  else (no - không có kết quả)
+    :Hiển thị message\n"Không tìm thấy task phù hợp";
+    stop
+  endif
+
+case (Lọc)
+  |#LightBlue|Lọc Tasks|
+  :Click vào bộ lọc;
+
+  partition "Chọn tiêu chí lọc" {
+    :Theo trạng thái:\n- To Do\n- In Progress\n- Done\n- Tất cả;
+
+    :Theo mức độ ưu tiên:\n- Low\n- Medium\n- High\n- Tất cả;
+
+    :Theo người được gán:\n- Unassigned\n- Assigned to me\n- Assigned to [Member]\n- Tất cả;
+
+    :Theo hạn hoàn thành:\n- Quá hạn (due_date < today)\n- Hôm nay (due_date = today)\n- Tuần này (7 ngày tới)\n- Tháng này (30 ngày tới)\n- Tất cả;
+  }
+
+  :Apply filter;
+
+  |System|
+  :Build WHERE query với conditions;
+  :JOIN với bảng users\n(để lấy assignee info);
+  :Execute query;
+
+  if (Có kết quả?) then (yes)
+    if (Kết quả > 10?) then (yes)
+      :Hiển thị kết quả với pagination;
+      stop
+    else (no)
+      :Hiển thị tất cả kết quả;
+      stop
+    endif
+  else (no)
+    :Hiển thị message\n"Không tìm thấy task phù hợp";
+    stop
+  endif
+
+case (Tìm kiếm + Lọc)
+  |#Yellow|Kết hợp|
+  :Nhập từ khóa tìm kiếm;
+  :Chọn bộ lọc;
+  :Apply;
+
+  |System|
+  :Build query với:\nWHERE (search conditions)\nAND (filter conditions);
+  :JOIN bảng users;
+  :Execute query;
+
+  if (Có kết quả?) then (yes)
+    :Hiển thị kết quả + pagination;
+    stop
+  else (no)
+    :Hiển thị message\n"Không tìm thấy task phù hợp";
+    stop
+  endif
+
+case (Phân trang)
+  |#Orange|Pagination|
+  :Kết quả tìm kiếm/lọc > 10;
+
+  |System|
+  :Hiển thị navigation:\n[Previous] [1] [2] [3] ... [Next];
+  :Mỗi trang hiển thị max 10 tasks;
+
+  |User|
+  :Click số trang;
+
+  |System|
+  :Load trang tương ứng\n(AJAX hoặc page reload);
+  :Hiển thị 10 tasks của trang đó;
+  stop
+
+endswitch
+
+note right
+  **Performance Optimization:**
+  - Sử dụng indexes trên:
+    * task_title, column_status
+    * priority, assigned_to
+    * due_date
+  - AJAX cho real-time search
+  - Limit 10 results per page
+  - JOIN optimization
+end note
+
+@enduml

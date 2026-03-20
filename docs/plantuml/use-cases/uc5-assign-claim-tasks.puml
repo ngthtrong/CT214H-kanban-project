@@ -1,0 +1,98 @@
+@startuml UC5 - Gán và Nhận Task
+
+title UC5: Gán và Nhận Task
+
+|User|
+start
+:Mở project board;
+
+if (User là?) then (Owner)
+  |#LightGreen|Owner: Gán Task|
+
+  switch (Cách gán?)
+  case (Gán khi tạo task mới)
+    :Click "+" tạo task;
+    :Điền thông tin task;
+    :Chọn member từ dropdown\n"Assigned to";
+    :Submit form;
+
+    |System|
+    :Lưu task với assigned_to = member_id;
+    :Task xuất hiện với avatar member;
+
+    note right
+      (Optional) Gửi notification
+      cho member được gán
+    end note
+
+    stop
+
+  case (Gán task đã tồn tại)
+    :Click "Chỉnh sửa" task;
+    :Chọn member từ dropdown\n"Assigned to";
+    :Submit;
+
+    |System|
+    :Cập nhật assigned_to trong database;
+    :Task card cập nhật avatar member;
+    stop
+
+  case (Hủy gán task)
+    :Click "Chỉnh sửa" task;
+    :Chọn "Unassigned" trong dropdown;
+    :Submit;
+
+    |System|
+    :Set assigned_to = NULL;
+    :Task trở về trạng thái unassigned;
+    stop
+  endswitch
+
+else (Member)
+  |#LightBlue|Member: Nhận Task|
+  :Xem project board;
+  :Nhìn thấy task với label\n"Unassigned";
+
+  if (Task assigned_to = NULL?) then (yes)
+    :Click nút "Nhận task"\nhoặc icon trên card;
+
+    |System|
+    :Kiểm tra task vẫn unassigned;
+
+    if (Task chưa được gán?) then (yes)
+      :Cập nhật assigned_to = current_user_id;
+      :Task card hiển thị avatar member;
+      :Hiển thị thông báo\n"Bạn đã nhận task thành công";
+
+      |Member|
+      :Bắt đầu làm việc với task;
+      stop
+    else (no)
+      :Hiển thị lỗi\n"Task đã được gán cho người khác";
+      detach
+    endif
+
+  else (no - task đã được gán)
+    if (Assigned to chính mình?) then (yes)
+      :Hiển thị info\n"Bạn đã được gán task này";
+      detach
+    else (no - assigned to người khác)
+      :Không hiển thị nút "Nhận task";
+      note right
+        Member không thể claim
+        task của người khác
+      end note
+      detach
+    endif
+  endif
+endif
+
+note bottom
+  **Business Rules:**
+  - Owner có thể gán task cho bất kỳ member nào
+  - Member chỉ có thể claim unassigned tasks
+  - Không thể claim task đã được gán
+  - Owner có thể hủy gán (set về unassigned)
+end note
+
+@enduml
