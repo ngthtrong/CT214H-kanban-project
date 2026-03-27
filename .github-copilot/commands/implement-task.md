@@ -43,12 +43,12 @@ Không thêm functionality chưa có test.
 
 ```bash
 # Chạy tests sau mỗi lần implement một phần:
-{test_command}  # → dần dần xanh hơn
+php vendor/bin/phpunit  # → dần dần xanh hơn
 ```
 
 ### Bước 5: Coverage Gate
 ```bash
-{coverage_command}
+php vendor/bin/phpunit --coverage-text --coverage-percentage
 # Nếu coverage < 80%:
 #   - Thêm test cases cho các branches chưa được cover
 #   - Hoặc ghi Tech Debt note với lý do cụ thể

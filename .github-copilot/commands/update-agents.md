@@ -29,8 +29,8 @@ Cập nhật các placeholder trong agent files:
 ### Bước 3: Validate Commands
 ```bash
 # Test that commands work
-{test_command} --help 2>/dev/null || echo "⚠️ Test command may not work"
-{lint_command} --help 2>/dev/null || echo "⚠️ Lint command may not work"
+php vendor/bin/phpunit --help 2>/dev/null || echo "⚠️ Test command may not work"
+./vendor/bin/phpcs --help 2>/dev/null || echo "⚠️ Lint command may not work"
 ```
 
 ### Bước 4: Update Command Files
@@ -48,11 +48,11 @@ git push origin develop
 🔧 Agent Guardrails Updated
 
 Commands configured:
-- Test: {test_command} ✅
-- Coverage: {coverage_command} ✅
-- Lint: {lint_command} ✅
-- Start: {start_command} ✅
-- Stop: {stop_command} ✅
+- Test: php vendor/bin/phpunit ✅
+- Coverage: php vendor/bin/phpunit --coverage-text --coverage-percentage ✅
+- Lint: ./vendor/bin/phpcs src && ./vendor/bin/phpmd src text cleancode,codesize,naming ✅
+- Start: php -S localhost:8000 -t . ✅
+- Stop: Ctrl+C ✅
 
 Agents updated:
 - developer.md

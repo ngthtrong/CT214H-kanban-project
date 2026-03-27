@@ -34,7 +34,7 @@ cat .github-copilot/workspace/tasks/TASK-{ID}.yaml
 
 ### Bước 3: Chạy Final Tests
 ```bash
-{test_command}
+php vendor/bin/phpunit
 if [ $? -ne 0 ]; then
   echo "❌ Tests failing — không thể tạo PR!"
   exit 1

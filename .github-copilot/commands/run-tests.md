@@ -43,7 +43,8 @@ Viết tests theo framework trong PROJECT-PROFILE.md (Playwright, Cypress, Selen
 
 ### Bước 5: Chạy Tests
 ```bash
-{e2e_test_command}
+# Dùng PHPUnit cho Feature/E2E tests
+php vendor/bin/phpunit tests/Feature
 # Ghi lại kết quả PASS/FAIL cho từng scenario
 ```
 

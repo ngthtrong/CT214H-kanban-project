@@ -30,7 +30,7 @@ git log --oneline | grep $FIX_COMMIT
 git checkout develop && git pull
 
 # Start environment
-{start_command}
+php -S localhost:8000 -t .
 ```
 
 ### Bước 4: Execute Steps to Reproduce
@@ -47,7 +47,7 @@ git checkout develop && git pull
 ### Bước 5: Test Regression
 ```bash
 # Chạy related tests để đảm bảo fix không break gì khác
-{test_command}
+php vendor/bin/phpunit
 ```
 
 ### Bước 6: Update Bug Report

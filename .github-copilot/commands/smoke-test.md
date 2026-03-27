@@ -31,11 +31,11 @@ echo "📍 Smoke test tại commit: $COMMIT_HASH trên branch: $BRANCH"
 ### Bước 3: Khởi động Môi trường
 ```bash
 # Chạy start command từ PROJECT-PROFILE.md
-{start_command}
+php -S localhost:8000 -t .
 
 # Chờ health check
 for i in {1..30}; do
-  curl -sf {health_check_url} && break
+  curl -sf http://localhost:8000 && break
   sleep 2
 done
 ```
@@ -52,7 +52,7 @@ Chỉ test critical user flows:
 
 ### Bước 5: Tear Down
 ```bash
-{stop_command}
+# Stop command: Ctrl+C (manual)
 # Dọn dẹp test data nếu cần
 ```
 

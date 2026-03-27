@@ -48,7 +48,7 @@ Với mỗi acceptance criterion trong task:
 ### Bước 5: Xác nhận Tests Đang Đỏ
 ```bash
 # Chạy test command từ PROJECT-PROFILE.md
-{test_command}
+php vendor/bin/phpunit
 # Expect: ALL NEW TESTS FAIL
 ```
 

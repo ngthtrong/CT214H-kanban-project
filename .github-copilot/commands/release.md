@@ -53,7 +53,7 @@ fi
 ### Bước 3: Chạy Regression Tests
 ```bash
 echo "🧪 Chạy regression tests trước release..."
-{test_command}
+php vendor/bin/phpunit
 if [ $? -ne 0 ]; then
   echo "❌ Regression tests fail! Không thể release."
   exit 1
