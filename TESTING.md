@@ -15,11 +15,11 @@ composer install
 ### 2. Setup Test Database
 
 ```bash
-# Create test database
-mysql -u root -p -e "CREATE DATABASE kanban_test;"
+# Start MySQL from XAMPP Control Panel, then create test database
+C:\xampp\mysql\bin\mysql.exe -u root -p -e "CREATE DATABASE kanban_test;"
 
 # Copy test environment config
-cp .env.testing.example .env.testing
+copy .env.testing.example .env.testing
 
 # Edit .env.testing if needed (default: root user, no password)
 # DB_HOST=localhost
@@ -38,10 +38,10 @@ composer test
 composer test:coverage
 
 # Run specific test file
-php vendor/bin/phpunit tests/Unit/AuthTest.php
+C:\xampp\php\php.exe vendor\bin\phpunit tests\Unit\AuthTest.php
 
 # Run specific test method
-php vendor/bin/phpunit tests/Unit/AuthTest.php::testUserCanLogin
+C:\xampp\php\php.exe vendor\bin\phpunit tests\Unit\AuthTest.php::testUserCanLogin
 ```
 
 ---

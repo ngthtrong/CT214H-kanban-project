@@ -31,11 +31,11 @@ echo "📍 Smoke test tại commit: $COMMIT_HASH trên branch: $BRANCH"
 ### Bước 3: Khởi động Môi trường
 ```bash
 # Chạy start command từ PROJECT-PROFILE.md
-php -S localhost:8000 -t .
+# Start Apache + MySQL từ XAMPP Control Panel
 
 # Chờ health check
 for i in {1..30}; do
-  curl -sf http://localhost:8000 && break
+  curl -sf http://localhost && break
   sleep 2
 done
 ```
@@ -52,7 +52,7 @@ Chỉ test critical user flows:
 
 ### Bước 5: Tear Down
 ```bash
-# Stop command: Ctrl+C (manual)
+# Stop Apache + MySQL từ XAMPP Control Panel
 # Dọn dẹp test data nếu cần
 ```
 

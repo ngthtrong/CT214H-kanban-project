@@ -15,17 +15,17 @@
 ## Commands
 
 ```yaml
-# Development server
-start: "php -S localhost:8000 -t ."
-stop: "Ctrl+C"
-health_check_url: "http://localhost:8000"
+# Development server (XAMPP)
+start: "Start Apache + MySQL from XAMPP Control Panel"
+stop: "Stop Apache + MySQL from XAMPP Control Panel"
+health_check_url: "http://localhost"
 
 # Testing & Quality
-test: "php vendor/bin/phpunit"
-coverage: "php vendor/bin/phpunit --coverage-text --coverage-percentage"
+test: "C:\\xampp\\php\\php.exe vendor\\bin\\phpunit"
+coverage: "C:\\xampp\\php\\php.exe vendor\\bin\\phpunit --coverage-text --coverage-percentage"
 coverage_gate: 80    # minimum threshold for CI/CD
-lint: "./vendor/bin/phpcs src && ./vendor/bin/phpmd src text cleancode,codesize,naming"
-lint_fix: "./vendor/bin/phpcbf src"
+lint: "C:\\xampp\\php\\php.exe vendor\\bin\\phpcs src && C:\\xampp\\php\\php.exe vendor\\bin\\phpmd src text cleancode,codesize,naming"
+lint_fix: "C:\\xampp\\php\\php.exe vendor\\bin\\phpcbf src"
 
 # Setup (run once after git clone)
 setup: "composer install && composer dump-autoload -o"

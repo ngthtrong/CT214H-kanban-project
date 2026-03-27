@@ -30,7 +30,7 @@ git log --oneline | grep $FIX_COMMIT
 git checkout develop && git pull
 
 # Start environment
-php -S localhost:8000 -t .
+# Start Apache + MySQL từ XAMPP Control Panel
 ```
 
 ### Bước 4: Execute Steps to Reproduce
@@ -47,7 +47,7 @@ php -S localhost:8000 -t .
 ### Bước 5: Test Regression
 ```bash
 # Chạy related tests để đảm bảo fix không break gì khác
-php vendor/bin/phpunit
+C:\xampp\php\php.exe vendor\bin\phpunit
 ```
 
 ### Bước 6: Update Bug Report

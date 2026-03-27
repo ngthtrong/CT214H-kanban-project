@@ -48,11 +48,11 @@ git push origin develop
 🔧 Agent Guardrails Updated
 
 Commands configured:
-- Test: php vendor/bin/phpunit ✅
-- Coverage: php vendor/bin/phpunit --coverage-text --coverage-percentage ✅
-- Lint: ./vendor/bin/phpcs src && ./vendor/bin/phpmd src text cleancode,codesize,naming ✅
-- Start: php -S localhost:8000 -t . ✅
-- Stop: Ctrl+C ✅
+- Test: C:\xampp\php\php.exe vendor\bin\phpunit ✅
+- Coverage: C:\xampp\php\php.exe vendor\bin\phpunit --coverage-text --coverage-percentage ✅
+- Lint: C:\xampp\php\php.exe vendor\bin\phpcs src && C:\xampp\php\php.exe vendor\bin\phpmd src text cleancode,codesize,naming ✅
+- Start: Start Apache + MySQL from XAMPP Control Panel ✅
+- Stop: Stop Apache + MySQL from XAMPP Control Panel ✅
 
 Agents updated:
 - developer.md
