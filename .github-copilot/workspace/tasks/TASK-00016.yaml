@@ -1,0 +1,23 @@
+id: TASK-00016
+type: unit-test
+status: pending
+priority: P1
+feature: "FR-00001-06 Form validation client va server"
+description: "Viet failing unit tests cho validation chi username/mat khau va chinh sach mat khau 8 ky tu co hoa-thuong."
+req_ref: "REQ-00001"
+depends_on: []
+branch: "feature/TASK-00016-validation-unit-tests"
+acceptance_criteria:
+  - given: "Mat khau ngan hon 8 hoac thieu hoa/thuong"
+    when: "Validate du lieu"
+    then: "Test ky vong fail voi thong bao loi"
+  - given: "Chi 2 truong username/mat khau"
+    when: "Validate"
+    then: "Test ky vong he thong chi ap quy tac tren 2 truong nay"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

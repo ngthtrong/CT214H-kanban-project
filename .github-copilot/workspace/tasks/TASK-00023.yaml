@@ -1,0 +1,20 @@
+id: TASK-00023
+type: implementation
+status: pending
+priority: P2
+feature: "FR-00001-08 Phan quyen truy cap co ban"
+description: "Implement middleware/guard cho 2 vai tro Guest va Authenticated User."
+req_ref: "REQ-00001"
+depends_on: [TASK-00022]
+branch: "feature/TASK-00023-access-control-implementation"
+acceptance_criteria:
+  - given: "Unit tests access control dang fail"
+    when: "Implement guard logic"
+    then: "Unit tests pass theo REQ"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

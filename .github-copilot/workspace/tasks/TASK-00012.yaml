@@ -1,0 +1,20 @@
+id: TASK-00012
+type: e2e-test
+status: pending
+priority: P3
+feature: "FR-00001-04 Quan ly profile ca nhan"
+description: "Viet E2E tests cho xem profile va cap nhat username/mat khau."
+req_ref: "REQ-00001"
+depends_on: [TASK-00011]
+branch: "feature/TASK-00012-profile-e2e-tests"
+acceptance_criteria:
+  - given: "Nguoi dung da dang nhap"
+    when: "Truy cap profile va cap nhat du lieu hop le"
+    then: "Thay doi duoc luu va hien thong bao thanh cong"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

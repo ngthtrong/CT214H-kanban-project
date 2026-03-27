@@ -1,0 +1,23 @@
+id: TASK-00010
+type: unit-test
+status: pending
+priority: P2
+feature: "FR-00001-04 Quan ly profile ca nhan"
+description: "Viet failing unit tests cho xem va cap nhat profile voi 2 truong username, mat khau."
+req_ref: "REQ-00001"
+depends_on: []
+branch: "feature/TASK-00010-profile-unit-tests"
+acceptance_criteria:
+  - given: "Nguoi dung da dang nhap"
+    when: "Lay du lieu profile"
+    then: "Test ky vong tra ve thong tin profile hop le"
+  - given: "Cap nhat username/mat khau"
+    when: "Du lieu hop le"
+    then: "Test ky vong cap nhat thanh cong"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

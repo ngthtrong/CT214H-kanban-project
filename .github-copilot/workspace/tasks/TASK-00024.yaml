@@ -1,0 +1,20 @@
+id: TASK-00024
+type: e2e-test
+status: pending
+priority: P3
+feature: "FR-00001-08 Phan quyen truy cap co ban"
+description: "Viet E2E tests cho luong redirect guest va truy cap cua authenticated user."
+req_ref: "REQ-00001"
+depends_on: [TASK-00023]
+branch: "feature/TASK-00024-access-control-e2e-tests"
+acceptance_criteria:
+  - given: "Guest va authenticated user"
+    when: "Truy cap trang yeu cau dang nhap"
+    then: "Hanh vi redirect/cho phep dung voi vai tro"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

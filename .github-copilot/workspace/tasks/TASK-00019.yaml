@@ -1,0 +1,23 @@
+id: TASK-00019
+type: unit-test
+status: pending
+priority: P2
+feature: "FR-00001-07 Giao dien nen tang va responsive"
+description: "Viet failing tests cho cac thanh phan layout chinh va hanh vi responsive mobile/desktop."
+req_ref: "REQ-00001"
+depends_on: []
+branch: "feature/TASK-00019-layout-unit-tests"
+acceptance_criteria:
+  - given: "Trang nen tang"
+    when: "Render"
+    then: "Test ky vong co header/footer/navigation"
+  - given: "Viewport mobile va desktop"
+    when: "Render giao dien"
+    then: "Test ky vong bo cuc su dung duoc"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

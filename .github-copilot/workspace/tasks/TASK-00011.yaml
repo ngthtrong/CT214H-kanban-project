@@ -1,0 +1,20 @@
+id: TASK-00011
+type: implementation
+status: pending
+priority: P2
+feature: "FR-00001-04 Quan ly profile ca nhan"
+description: "Implement xem/cap nhat profile trong pham vi username va mat khau."
+req_ref: "REQ-00001"
+depends_on: [TASK-00010]
+branch: "feature/TASK-00011-profile-implementation"
+acceptance_criteria:
+  - given: "Unit tests profile dang fail"
+    when: "Implement profile service/controller"
+    then: "Tat ca unit tests profile pass"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

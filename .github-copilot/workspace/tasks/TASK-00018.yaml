@@ -1,0 +1,20 @@
+id: TASK-00018
+type: e2e-test
+status: pending
+priority: P2
+feature: "FR-00001-06 Form validation client va server"
+description: "Viet E2E tests cho thong bao loi validation va chan submit khong hop le."
+req_ref: "REQ-00001"
+depends_on: [TASK-00017]
+branch: "feature/TASK-00018-validation-e2e-tests"
+acceptance_criteria:
+  - given: "Nguoi dung nhap du lieu khong hop le"
+    when: "Submit form"
+    then: "UI hien loi va server tu choi request"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

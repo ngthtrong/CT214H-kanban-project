@@ -1,0 +1,20 @@
+id: TASK-00002
+type: implementation
+status: pending
+priority: P1
+feature: "FR-00001-01 Dang ky tai khoan"
+description: "Implement luong dang ky tai khoan de pass unit tests, bao gom kiem tra trung lap va luu mat khau da ma hoa."
+req_ref: "REQ-00001"
+depends_on: [TASK-00001]
+branch: "feature/TASK-00002-register-implementation"
+acceptance_criteria:
+  - given: "Unit tests dang ky dang fail"
+    when: "Implement business logic dang ky"
+    then: "Tat ca unit tests lien quan dang ky pass"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

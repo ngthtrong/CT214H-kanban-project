@@ -1,0 +1,20 @@
+id: TASK-00005
+type: implementation
+status: pending
+priority: P1
+feature: "FR-00001-02 Dang nhap he thong"
+description: "Implement dang nhap voi username/email + mat khau va tao session theo REQ."
+req_ref: "REQ-00001"
+depends_on: [TASK-00004]
+branch: "feature/TASK-00005-login-implementation"
+acceptance_criteria:
+  - given: "Unit tests dang nhap dang fail"
+    when: "Implement auth logic dang nhap"
+    then: "Unit tests dang nhap pass"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""

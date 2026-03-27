@@ -1,0 +1,20 @@
+id: TASK-00014
+type: implementation
+status: pending
+priority: P3
+feature: "FR-00001-05 Khong ho tro anh dai dien"
+description: "Implement chan UI/API lien quan avatar theo Out of Scope da duoc phe duyet."
+req_ref: "REQ-00001"
+depends_on: [TASK-00013]
+branch: "feature/TASK-00014-avatar-block-implementation"
+acceptance_criteria:
+  - given: "Unit tests chan avatar dang fail"
+    when: "Implement chan tinh nang"
+    then: "Unit tests pass"
+coverage_pct: 0
+tests_passing: 0
+n1_scan: "not-run"
+tech_debt_notes: ""
+review_status: "pending"
+reviewed_by: "Tech Lead Agent"
+review_date: ""
