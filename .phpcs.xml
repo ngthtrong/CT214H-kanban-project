@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Kanban App Coding Standard">
+    <description>PHP_CodeSniffer ruleset for Kanban project — PSR-12 standard</description>
+
+    <!-- Files to check -->
+    <file>src</file>
+    <file>tests</file>
+
+    <!-- Exclude directories -->
+    <exclude-pattern>*/migrations/*</exclude-pattern>
+    <exclude-pattern>*/resources/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/.git/*</exclude-pattern>
+
+    <!-- PSR-12 Standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Additional rules for best practices -->
+    <rule ref="Generic.PHP.StrictTypes"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="150"/>
+        </properties>
+    </rule>
+
+    <!-- No unused variables -->
+    <rule ref="Generic.Strings.UnnecessaryStringConcat"/>
+
+    <!-- Whitespace rules -->
+    <rule ref="Generic.WhiteSpace.ScopeIndent">
+        <properties>
+            <property name="indent" value="4"/>
+            <property name="tabIndent" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- Comment rules -->
+    <rule ref="PEAR.Commenting.ClassComment"/>
+    <rule ref="PEAR.Commenting.FileComment"/>
+</ruleset>

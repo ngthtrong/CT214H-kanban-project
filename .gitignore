@@ -5,3 +5,22 @@ node_modules/
 dist/
 build/
 *.log
+
+# PHPUnit & Test Coverage
+vendor/
+coverage/
+.coverage
+.php-cs-fixer.cache
+.phpmd-cache
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary & Cache
+tmp/
+temp/
+.tmp

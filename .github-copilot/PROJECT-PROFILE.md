@@ -8,19 +8,28 @@
 - **Language**: PHP 8.x (FACT: từ tài liệu đặc tả)
 - **Framework**: Native PHP backend + Bootstrap frontend (FACT: từ tài liệu đặc tả)
 - **Database**: MySQL 8.x (FACT: từ tài liệu đặc tả)
-- **Test runner**: Chưa xác định (không có cấu hình test trong repo hiện tại)
-- **Coverage tool**: Chưa xác định
-- **Linter**: Chưa xác định
+- **Test runner**: PHPUnit 11.x (SELECTED)
+- **Coverage tool**: PCOV (installed as PHP extension)
+- **Linter**: PHP_CodeSniffer + PHPMD (PSR-12 standard)
 
 ## Commands
 
 ```yaml
-start: "php -S localhost:8000 -t ."   # ASSUMPTION: local dev PHP server
-stop: "Ctrl+C"                         # manual stop
-test: "N/A - chưa có test automation"
-coverage: "N/A - chưa có coverage automation"
-lint: "N/A - chưa có lint automation"
-health_check_url: "N/A"
+# Development server
+start: "php -S localhost:8000 -t ."
+stop: "Ctrl+C"
+health_check_url: "http://localhost:8000"
+
+# Testing & Quality
+test: "php vendor/bin/phpunit"
+coverage: "php vendor/bin/phpunit --coverage-text --coverage-percentage"
+coverage_gate: 80    # minimum threshold for CI/CD
+lint: "./vendor/bin/phpcs src && ./vendor/bin/phpmd src text cleancode,codesize,naming"
+lint_fix: "./vendor/bin/phpcbf src"
+
+# Setup (run once after git clone)
+setup: "composer install && composer dump-autoload -o"
+test_install: "composer require --dev phpunit/phpunit squizlabs/php_codesniffer phpmd/phpmd"
 ```
 
 ## Smoke Test Scenarios (≤ 10)
