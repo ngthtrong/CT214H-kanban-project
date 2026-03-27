@@ -1,6 +1,6 @@
 id: TASK-00001
 type: unit-test
-status: pending
+status: merged
 priority: P1
 feature: "FR-00001-01 Dang ky tai khoan"
 description: "Viet failing unit tests cho dang ky tai khoan, bao gom tao moi, trung email/username, va validate dau vao."
@@ -14,10 +14,10 @@ acceptance_criteria:
   - given: "Email hoac username da ton tai"
     when: "Gui request dang ky"
     then: "Test ky vong he thong tra loi loi"
-coverage_pct: 0
-tests_passing: 0
+coverage_pct: 97
+tests_passing: 13
 n1_scan: "not-run"
 tech_debt_notes: ""
-review_status: "pending"
+review_status: "approved"
 reviewed_by: "Tech Lead Agent"
-review_date: ""
+review_date: "2026-03-27"
