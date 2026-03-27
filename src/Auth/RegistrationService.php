@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace App\Auth;
 
 use App\Auth\Contracts\UserRepositoryInterface;
-use App\Auth\Infrastructure\InMemoryUserRepository;
 
 class RegistrationService
 {
     private UserRepositoryInterface $users;
+    /** @var callable(string): string|false */
+    private $passwordHasher;
 
-    public function __construct(?UserRepositoryInterface $users = null)
+    /**
+     * @param callable(string): string|false|null $passwordHasher
+     */
+    public function __construct(UserRepositoryInterface $users, ?callable $passwordHasher = null)
     {
-        $this->users = $users ?? new InMemoryUserRepository();
+        $this->users = $users;
+        $this->passwordHasher = $passwordHasher ?? static fn (string $password): string|false => password_hash($password, PASSWORD_DEFAULT);
     }
 
     /**
@@ -42,11 +47,22 @@ class RegistrationService
             ];
         }
 
+        $passwordHash = ($this->passwordHasher)((string) $payload['password']);
+
+        if ($passwordHash === false) {
+            return [
+                'success' => false,
+                'errors' => [
+                    'password' => 'Unable to hash password at this time.',
+                ],
+            ];
+        }
+
         $user = [
             'id' => $this->users->nextId(),
             'username' => $username,
             'email' => $email,
-            'password_hash' => password_hash((string) $payload['password'], PASSWORD_DEFAULT),
+            'password_hash' => $passwordHash,
         ];
 
         $this->users->save($user);

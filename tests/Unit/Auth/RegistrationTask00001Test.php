@@ -27,6 +27,46 @@ class RegistrationTask00001Test extends TestCase
         $this->assertSame('alice', $result['user']['username']);
         $this->assertSame('alice@example.com', $result['user']['email']);
         $this->assertNotSame('ValidPass1', $result['user']['password_hash']);
+        $this->assertTrue(password_verify('ValidPass1', $result['user']['password_hash']));
+    }
+
+    public function test_registration_service_should_return_error_when_password_hashing_fails(): void
+    {
+        $service = new RegistrationService(
+            new InMemoryUserRepository(),
+            static fn (string $password): string|false => false
+        );
+
+        $result = $service->register([
+            'username' => 'alice',
+            'email' => 'alice@example.com',
+            'password' => 'ValidPass1',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('Unable to hash password at this time.', $result['errors']['password']);
+    }
+
+    public function test_registration_service_should_increment_user_id_when_repository_already_has_users(): void
+    {
+        $users = new InMemoryUserRepository([
+            [
+                'id' => 1,
+                'username' => 'existing',
+                'email' => 'existing@example.com',
+                'password_hash' => 'hash',
+            ],
+        ]);
+        $service = new RegistrationService($users);
+
+        $result = $service->register([
+            'username' => 'alice2',
+            'email' => 'alice2@example.com',
+            'password' => 'ValidPass1',
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(2, $result['user']['id']);
     }
 
     public function test_registration_service_should_reject_registration_when_email_already_exists(): void
