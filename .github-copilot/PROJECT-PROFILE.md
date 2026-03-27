@@ -5,51 +5,52 @@
 
 ## Stack
 
-- **Language**: <!-- Go / TypeScript / Python / Java / ... -->
-- **Framework**: <!-- Gin / Express / FastAPI / Spring Boot / ... -->
-- **Database**: <!-- PostgreSQL / MongoDB / MySQL / ... -->
-- **Test runner**: <!-- Jest / pytest / go test / JUnit / ... -->
-- **Coverage tool**: <!-- nyc / coverage.py / go tool cover / ... -->
-- **Linter**: <!-- ESLint / golangci-lint / pylint / ... -->
+- **Language**: PHP 8.x (FACT: từ tài liệu đặc tả)
+- **Framework**: Native PHP backend + Bootstrap frontend (FACT: từ tài liệu đặc tả)
+- **Database**: MySQL 8.x (FACT: từ tài liệu đặc tả)
+- **Test runner**: Chưa xác định (không có cấu hình test trong repo hiện tại)
+- **Coverage tool**: Chưa xác định
+- **Linter**: Chưa xác định
 
 ## Commands
 
 ```yaml
-start: ""           # ví dụ: docker-compose up / npm run dev
-stop: ""            # ví dụ: docker-compose down / pkill node
-test: ""            # ví dụ: npm test / go test ./... / pytest
-coverage: ""        # ví dụ: npm run coverage / pytest --cov
-lint: ""            # ví dụ: npm run lint / golangci-lint run
-health_check_url: "" # ví dụ: http://localhost:8080/health
+start: "php -S localhost:8000 -t ."   # ASSUMPTION: local dev PHP server
+stop: "Ctrl+C"                         # manual stop
+test: "N/A - chưa có test automation"
+coverage: "N/A - chưa có coverage automation"
+lint: "N/A - chưa có lint automation"
+health_check_url: "N/A"
 ```
 
 ## Smoke Test Scenarios (≤ 10)
 
 <!-- Liệt kê các critical user flow cần test trên live environment -->
 
-1. <!-- Happy path chính: ví dụ "User có thể đăng ký tài khoản mới" -->
-2. <!-- Authentication: ví dụ "User có thể đăng nhập và nhận token" -->
-3. <!-- Core feature 1 -->
-4. <!-- Core feature 2 -->
-5. <!-- Error handling quan trọng -->
+1. User có thể đăng ký tài khoản mới.
+2. User có thể đăng nhập và đăng xuất.
+3. Owner có thể tạo project và mời thành viên.
+4. Member có thể claim task chưa được gán.
+5. User được phép tìm kiếm/lọc task theo từ khóa và trạng thái.
 
 ## Fragile Zones Summary
 
 | Zone | File | Risk | Lý do |
 |------|------|------|-------|
-| <!-- tên zone --> | <!-- đường dẫn file --> | 🔴 HIGH / 🟡 MEDIUM / 🟢 LOW | <!-- giải thích --> |
+| Documentation-only stage | Toàn repo | 🟡 MEDIUM | Chưa có source runtime/test config nên chưa verify được khả năng chạy thật |
 
 ## Tech Debt Register
 
 | ID | Mô tả | Ảnh hưởng | Priority |
 |----|-------|-----------|----------|
-| TD-001 | <!-- mô tả tech debt --> | <!-- ảnh hưởng đến vùng nào --> | P1 / P2 / P3 |
+| TD-001 | Thiếu source code ứng dụng trong workspace hiện tại | Không thể chạy build/test/lint tự động | P1 |
+| TD-002 | Thiếu test runner và coverage pipeline | Không đo được chất lượng regression | P1 |
 
 ## External Dependencies
 
-- **Third-party APIs**: <!-- list các external APIs được sử dụng -->
-- **Secrets management**: <!-- .env / Vault / AWS Secrets Manager -->
-- **Background jobs**: <!-- cron, scheduler, queue worker -->
+- **Third-party APIs**: Chưa xác định
+- **Secrets management**: Chưa xác định
+- **Background jobs**: Chưa xác định
 
 ---
 *File này được tạo bởi `/setup-project` và cập nhật bởi `/detect-stack`, `/discover-codebase`*
