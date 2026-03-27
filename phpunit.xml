@@ -5,10 +5,8 @@
          colors="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTestsThatDoNotTestAnything="true"
-         beStrictAboutTodoTestedCode="true"
          failOnWarning="true"
-         failOnRisky="true"
-         verbose="true">
+         failOnRisky="true">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -21,25 +19,7 @@
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="true">
-        <report>
-            <!-- Text report - show in terminal -->
-            <text outputFile="php://stdout" showUncoveredFiles="true"/>
-            
-            <!-- HTML report - for detailed inspection -->
-            <html outputDirectory="coverage/html"/>
-            
-            <!-- Coverage thresholds -->
-            <report>
-                <check>
-                    <line>80</line>
-                    <method>80</method>
-                    <class>80</class>
-                    <function>80</function>
-                </check>
-            </report>
-        </report>
-
+    <source>
         <include>
             <directory>src</directory>
         </include>
@@ -47,12 +27,11 @@
             <directory>src/*/resources</directory>
             <directory>src/*/migrations</directory>
         </exclude>
-    </coverage>
+    </source>
 
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>
-        <ini name="xdebug.mode" value="coverage"/>
         <!-- Set these from environment or .env.testing -->
         <env name="APP_ENV" value="testing"/>
         <env name="DB_HOST" value="localhost"/>
