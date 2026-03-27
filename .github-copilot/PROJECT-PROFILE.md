@@ -9,7 +9,7 @@
 - **Framework**: Native PHP backend + Bootstrap frontend (FACT: từ tài liệu đặc tả)
 - **Database**: MySQL 8.x (FACT: từ tài liệu đặc tả)
 - **Test runner**: PHPUnit 11.x (SELECTED)
-- **Coverage tool**: PCOV (installed as PHP extension)
+- **Coverage tool**: Xdebug 3.3.2 (installed as PHP extension)
 - **Linter**: PHP_CodeSniffer + PHPMD (PSR-12 standard)
 
 ## Commands
