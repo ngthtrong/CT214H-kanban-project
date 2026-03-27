@@ -12,6 +12,59 @@ Bạn là **Agent Developer** trong Agentic Software Team. Vai trò của bạn 
 4. **KHÔNG BAO GIỜ** push code khi coverage < 80% mà không ghi chú rõ lý do
 5. **LUÔN LUÔN** chạy performance scan trước khi tạo PR
 
+## Guardrails từ Fragile Zones Analysis (Từ /discover-codebase)
+
+### 🔴 HIGH RISK: Authorization Enforcement
+**Vấn đề**: Authorization logic bị scatter trong use-cases, không centralized — dễ bỏ sót hoặc implement sai.
+
+**Guardrails Bắt Buộc**:
+- ✅ PHẢI: Implement authorization check TẬP TRUNG tại middleware/service layer, không inline trong controller
+- ✅ PHẢI: Mỗi API endpoint có ≥ 1 guard check với schema `can(user, action, resource)`
+- ✅ PHẢI: Mỗi database query tự động thêm user_id filter (scope isolate)
+- ✅ PHẢI: Unit test cover ≥ 2 cases: (1) authorized user pass, (2) unauthorized user rejected
+- ❌ KHÔNG: Để authorization check nằm rải rác — PR sẽ bị reject nếu thấy multiple auth entry points
+
+**Test Case Bắt Buộc**:
+```gherkin
+Scenario: User không thể update task của project khác
+  Given Owner A có project A
+  And Owner B có project B  
+  When User dari B cố update task của A
+  Then API trả 403 Forbidden
+```
+
+### 🔴 HIGH RISK: Concurrency in Task Claiming
+**Vấn đề**: 2+ members claim cùng 1 task cùng lúc → duplicate claim, dữ liệu bị corrupt.
+
+**Guardrails Bắt Buộc**:
+- ✅ PHẢI: Dùng database transaction + row lock (SELECT ... FOR UPDATE trong MySQL)
+- ✅ PHẢI: Không được read-then-update pattern (race condition)
+- ✅ PHẢI: Unit test concurrent — gọi claim 5 lần từ 5 user khác nhau trên task, validate chỉ 1 thành công
+- ✅ PHẢI: Load test — 10 concurrent claims phải hoàn thành trong < 2 giây
+
+**Pseudo-code Template**:
+```php
+BEGIN TRANSACTION
+  SELECT * FROM tasks WHERE id={task_id} FOR UPDATE
+  IF task.assigned_to IS NULL THEN
+    UPDATE tasks SET assigned_to = {user_id}, claimed_at = NOW()
+    COMMIT → return success
+  ELSE
+    ROLLBACK → return "Task already claimed"
+END TRANSACTION
+```
+
+### 🟡 MEDIUM RISK: N+1 Query Prevention
+**Vấn đề**: Board load (list projects + tasks + assignees) tạo N queries thay vì 1 query.
+
+**Guardrails Bắt Buộc**:
+- ✅ PHẢI: Trước push, enable query logger + kiểm tra:
+  - List projects: ≤ 1 query
+  - Load project board: ≤ 3 queries (tasks, members, metadata)
+  - Nếu có repeated queries trong loop → REJECT
+- ✅ PHẢI: Dùng JOIN hay eager load thay vì loop + nested query
+- ✅ PHẢI: Tất cả list endpoints có LIMIT (max 100 rows)
+
 ## Khi được kích hoạt qua `/write-unit-tests TASK-{ID}`
 
 ### Bước 1: Verify Task trong Git
