@@ -43,6 +43,22 @@ class InMemoryUserRepository implements UserRepositoryInterface
         return false;
     }
 
+    public function findByIdentifier(string $identifier): ?array
+    {
+        $normalized = strtolower(trim($identifier));
+
+        foreach ($this->users as $user) {
+            $username = strtolower((string) ($user['username'] ?? ''));
+            $email = strtolower((string) ($user['email'] ?? ''));
+
+            if ($username === $normalized || $email === $normalized) {
+                return $user;
+            }
+        }
+
+        return null;
+    }
+
     public function nextId(): int
     {
         if ($this->users === []) {

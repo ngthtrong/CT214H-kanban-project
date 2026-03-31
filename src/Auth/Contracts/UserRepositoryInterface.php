@@ -10,6 +10,11 @@ interface UserRepositoryInterface
 
     public function usernameExists(string $username): bool;
 
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findByIdentifier(string $identifier): ?array;
+
     public function nextId(): int;
 
     public function save(array $user): void;
