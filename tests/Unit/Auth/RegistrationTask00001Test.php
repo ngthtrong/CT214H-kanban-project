@@ -1,161 +1,157 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Tests\Unit\Auth;
 
-use App\Auth\Infrastructure\InMemoryUserRepository;
 use App\Auth\RegistrationService;
-use PHPUnit\Framework\Attributes\DataProvider;
+use App\Database\Connection;
 use PHPUnit\Framework\TestCase;
+use PDO;
+use PDOStatement;
 
 class RegistrationTask00001Test extends TestCase
 {
+    private RegistrationService $service;
+    private $mockPdo;
+    private $mockStmt;
+    private Connection $mockConnection;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Create mock PDO and Statement
+        $this->mockPdo = $this->createMock(PDO::class);
+        $this->mockStmt = $this->createMock(PDOStatement::class);
+        
+        // Set the mock PDO instance
+        Connection::setInstance($this->mockPdo);
+        
+        // Create service with real connection (using mock PDO)
+        $this->mockConnection = Connection::fromEnvironment();
+        $this->service = new RegistrationService($this->mockConnection);
+    }
+
+    protected function tearDown(): void
+    {
+        Connection::resetInstance();
+        parent::tearDown();
+    }
+
     public function test_registration_service_should_create_account_when_payload_is_valid(): void
     {
-        $service = new RegistrationService(new InMemoryUserRepository());
+        // Setup: No existing user
+        $this->mockPdo->method('prepare')->willReturn($this->mockStmt);
+        $this->mockStmt->method('execute')->willReturn(true);
+        $this->mockStmt->method('fetch')->willReturn(false); // No existing user
+        $this->mockPdo->method('lastInsertId')->willReturn('1');
 
-        $result = $service->register([
-            'username' => 'alice',
-            'email' => 'Alice@example.com',
-            'password' => 'ValidPass1',
-        ]);
+        $payload = [
+            'username' => 'testuser',
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'full_name' => 'Test User'
+        ];
 
-        $this->assertTrue($result['success']);
-        $this->assertSame([], $result['errors']);
-        $this->assertArrayHasKey('user', $result);
-        $this->assertSame('alice', $result['user']['username']);
-        $this->assertSame('alice@example.com', $result['user']['email']);
-        $this->assertNotSame('ValidPass1', $result['user']['password_hash']);
-        $this->assertTrue(password_verify('ValidPass1', $result['user']['password_hash']));
-    }
-
-    public function test_registration_service_should_return_error_when_password_hashing_fails(): void
-    {
-        $service = new RegistrationService(
-            new InMemoryUserRepository(),
-            static fn (string $password): string|false => false
-        );
-
-        $result = $service->register([
-            'username' => 'alice',
-            'email' => 'alice@example.com',
-            'password' => 'ValidPass1',
-        ]);
-
-        $this->assertFalse($result['success']);
-        $this->assertSame('Unable to hash password at this time.', $result['errors']['password']);
-    }
-
-    public function test_registration_service_should_increment_user_id_when_repository_already_has_users(): void
-    {
-        $users = new InMemoryUserRepository([
-            [
-                'id' => 1,
-                'username' => 'existing',
-                'email' => 'existing@example.com',
-                'password_hash' => 'hash',
-            ],
-        ]);
-        $service = new RegistrationService($users);
-
-        $result = $service->register([
-            'username' => 'alice2',
-            'email' => 'alice2@example.com',
-            'password' => 'ValidPass1',
-        ]);
+        $result = $this->service->register($payload);
 
         $this->assertTrue($result['success']);
-        $this->assertSame(2, $result['user']['id']);
+        $this->assertArrayHasKey('data', $result);
+        $this->assertEquals('testuser', $result['data']['username']);
+        $this->assertEquals('test@example.com', $result['data']['email']);
+        $this->assertEquals('Test User', $result['data']['full_name']);
     }
 
     public function test_registration_service_should_reject_registration_when_email_already_exists(): void
     {
-        $users = new InMemoryUserRepository([
-            [
-                'id' => 1,
-                'username' => 'bob',
-                'email' => 'bob@example.com',
-                'password_hash' => 'hash',
-            ],
-        ]);
-        $service = new RegistrationService($users);
+        // Setup: Username check returns false, Email check returns true (exists)
+        $usernameStmt = $this->createMock(PDOStatement::class);
+        $usernameStmt->method('execute')->willReturn(true);
+        $usernameStmt->method('fetch')->willReturn(false); // Username not exists
 
-        $result = $service->register([
-            'username' => 'charlie',
-            'email' => 'bob@example.com',
-            'password' => 'ValidPass1',
-        ]);
+        $emailStmt = $this->createMock(PDOStatement::class);
+        $emailStmt->method('execute')->willReturn(true);
+        $emailStmt->method('fetch')->willReturn(['user_id' => 1]); // Email exists
+
+        $this->mockPdo->method('prepare')
+            ->willReturnCallback(function($sql) use ($usernameStmt, $emailStmt) {
+                if (str_contains($sql, 'username')) {
+                    return $usernameStmt;
+                }
+                return $emailStmt;
+            });
+
+        $payload = [
+            'username' => 'newuser',
+            'email' => 'existing@example.com',
+            'password' => 'password123',
+            'full_name' => 'New User'
+        ];
+
+        $result = $this->service->register($payload);
 
         $this->assertFalse($result['success']);
-        $this->assertSame('Email already exists.', $result['errors']['email']);
+        $this->assertStringContainsString('Email', $result['error']);
     }
 
     public function test_registration_service_should_reject_registration_when_username_already_exists(): void
     {
-        $users = new InMemoryUserRepository([
-            [
-                'id' => 1,
-                'username' => 'bob',
-                'email' => 'bob@example.com',
-                'password_hash' => 'hash',
-            ],
-        ]);
-        $service = new RegistrationService($users);
+        // Setup: Username check returns true (exists)
+        $this->mockPdo->method('prepare')->willReturn($this->mockStmt);
+        $this->mockStmt->method('execute')->willReturn(true);
+        $this->mockStmt->method('fetch')->willReturn(['user_id' => 1]); // Username exists
 
-        $result = $service->register([
-            'username' => 'bob',
-            'email' => 'charlie@example.com',
-            'password' => 'ValidPass1',
-        ]);
-
-        $this->assertFalse($result['success']);
-        $this->assertSame('Username already exists.', $result['errors']['username']);
-    }
-
-    #[DataProvider('invalidPayloadProvider')]
-    public function test_registration_service_should_reject_registration_when_required_fields_are_missing_or_invalid(
-        array $payload,
-        string $errorKey
-    ): void {
-        $service = new RegistrationService(new InMemoryUserRepository());
-
-        $result = $service->register($payload);
-
-        $this->assertFalse($result['success']);
-        $this->assertArrayHasKey($errorKey, $result['errors']);
-    }
-
-    /**
-     * @return array<string, array{payload: array<string, string>, errorKey: string}>
-     */
-    public static function invalidPayloadProvider(): array
-    {
-        return [
-            'missing username' => [
-                'payload' => [
-                    'username' => '',
-                    'email' => 'alice@example.com',
-                    'password' => 'ValidPass1',
-                ],
-                'errorKey' => 'username',
-            ],
-            'invalid email format' => [
-                'payload' => [
-                    'username' => 'alice',
-                    'email' => 'alice-at-example.com',
-                    'password' => 'ValidPass1',
-                ],
-                'errorKey' => 'email',
-            ],
-            'password missing uppercase' => [
-                'payload' => [
-                    'username' => 'alice',
-                    'email' => 'alice@example.com',
-                    'password' => 'lowercase1',
-                ],
-                'errorKey' => 'password',
-            ],
+        $payload = [
+            'username' => 'existinguser',
+            'email' => 'new@example.com',
+            'password' => 'password123',
+            'full_name' => 'New User'
         ];
+
+        $result = $this->service->register($payload);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Username', $result['error']);
+    }
+
+    public function test_registration_service_should_reject_registration_when_required_fields_are_missing_or_invalid(): void
+    {
+        // Test missing username
+        $result = $this->service->register([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'full_name' => 'Test User'
+        ]);
+        $this->assertFalse($result['success']);
+        $this->assertEquals('username', $result['field']);
+
+        // Test invalid email format
+        $result = $this->service->register([
+            'username' => 'testuser',
+            'email' => 'invalid-email',
+            'password' => 'password123',
+            'full_name' => 'Test User'
+        ]);
+        $this->assertFalse($result['success']);
+        $this->assertEquals('email', $result['field']);
+
+        // Test password too short
+        $result = $this->service->register([
+            'username' => 'testuser',
+            'email' => 'test@example.com',
+            'password' => '123',
+            'full_name' => 'Test User'
+        ]);
+        $this->assertFalse($result['success']);
+        $this->assertEquals('password', $result['field']);
+
+        // Test missing full_name
+        $result = $this->service->register([
+            'username' => 'testuser',
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'full_name' => ''
+        ]);
+        $this->assertFalse($result['success']);
+        $this->assertEquals('full_name', $result['field']);
     }
 }

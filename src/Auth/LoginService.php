@@ -4,46 +4,97 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
-use App\Auth\Contracts\UserRepositoryInterface;
+use App\Database\Connection;
 
+/**
+ * Login Service
+ * Handles user authentication
+ * Team Kanban - CT214H Final Project
+ */
 class LoginService
 {
-    private UserRepositoryInterface $users;
-
-    public function __construct(UserRepositoryInterface $users)
+    private Connection $db;
+    
+    public function __construct(?Connection $db = null)
     {
-        $this->users = $users;
+        $this->db = $db ?? Connection::fromEnvironment();
     }
-
+    
     /**
-     * @param array<string, mixed> $payload
-     * @return array{success: bool, errors: array<string, string>, user?: array<string, mixed>}
+     * Authenticate user with username/email and password
+     *
+     * @param string $identifier Username or email
+     * @param string $password Plain text password
+     * @return array Result with 'success' boolean and 'data' or 'error' keys
      */
-    public function login(array $payload): array
+    public function login(string $identifier, string $password): array
     {
-        $identifier = trim((string) ($payload['identifier'] ?? ''));
-        $password = (string) ($payload['password'] ?? '');
-
-        if ($identifier === '' || $password === '') {
+        $identifier = trim($identifier);
+        $password = trim($password);
+        
+        // Validate input
+        if (empty($identifier)) {
             return [
                 'success' => false,
-                'errors' => ['credentials' => 'Invalid credentials.'],
+                'error' => 'Vui lòng nhập tên đăng nhập hoặc email'
             ];
         }
-
-        $user = $this->users->findByIdentifier($identifier);
-
-        if ($user === null || !password_verify($password, (string) ($user['password_hash'] ?? ''))) {
+        
+        if (empty($password)) {
             return [
                 'success' => false,
-                'errors' => ['credentials' => 'Invalid credentials.'],
+                'error' => 'Vui lòng nhập mật khẩu'
             ];
         }
-
+        
+        // Find user by username or email
+        $user = $this->findUserByIdentifier($identifier);
+        
+        if (!$user) {
+            return [
+                'success' => false,
+                'error' => 'Tài khoản không tồn tại'
+            ];
+        }
+        
+        // Verify password
+        if (!password_verify($password, $user['password'])) {
+            return [
+                'success' => false,
+                'error' => 'Mật khẩu không đúng'
+            ];
+        }
+        
+        // Remove password from return data
+        unset($user['password']);
+        
         return [
             'success' => true,
-            'errors' => [],
-            'user' => $user,
+            'data' => $user
         ];
+    }
+    
+    /**
+     * Find user by username or email
+     */
+    private function findUserByIdentifier(string $identifier): ?array
+    {
+        $sql = 'SELECT user_id, username, email, password, full_name, avatar, created_at 
+                FROM users 
+                WHERE username = ? OR email = ?';
+        
+        return $this->db->queryOne($sql, [$identifier, strtolower($identifier)]);
+    }
+    
+    /**
+     * Get user by ID
+     */
+    public function getUserById(int $userId): ?array
+    {
+        $sql = 'SELECT user_id, username, email, full_name, avatar, created_at 
+                FROM users 
+                WHERE user_id = ?';
+        
+        return $this->db->queryOne($sql, [$userId]);
     }
 }
