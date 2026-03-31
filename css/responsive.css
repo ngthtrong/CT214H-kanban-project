@@ -355,7 +355,7 @@
     }
 }
 
-/* Kanban Board Responsive (for future use) */
+/* Kanban Board Responsive */
 @media (max-width: 991px) {
     .kanban-board {
         overflow-x: auto;
@@ -363,18 +363,53 @@
     }
     
     .kanban-columns {
+        grid-template-columns: repeat(3, minmax(280px, 1fr));
         min-width: 900px;
+    }
+    
+    .project-header {
+        flex-direction: column;
+    }
+    
+    .project-header-right {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 
 @media (max-width: 767px) {
     .kanban-columns {
+        display: flex;
         flex-direction: column;
         min-width: 100%;
+        gap: var(--spacing-md);
     }
     
     .kanban-column {
         width: 100%;
-        margin-bottom: var(--spacing-md);
+        min-height: 300px;
+    }
+    
+    .project-header-right {
+        flex-wrap: wrap;
+    }
+    
+    .project-header-right .btn {
+        flex: 1;
+        min-width: 150px;
+        justify-content: center;
+    }
+    
+    .project-title {
+        font-size: 1.5rem;
+    }
+    
+    .task-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-large {
+        max-width: 95%;
+        margin: var(--spacing-sm);
     }
 }

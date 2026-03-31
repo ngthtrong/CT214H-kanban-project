@@ -79,9 +79,10 @@ class ProjectService
             return ['success' => false, 'error' => 'Dự án không tồn tại'];
         }
 
-        // Add stats
+        // Add stats and user role
         $project['stats'] = $this->repository->getProjectStats($projectId);
         $project['is_owner'] = ($project['owner_id'] == $userId);
+        $project['user_role'] = $project['is_owner'] ? 'owner' : 'member';
 
         return ['success' => true, 'data' => $project];
     }

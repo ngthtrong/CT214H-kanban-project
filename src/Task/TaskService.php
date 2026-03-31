@@ -109,6 +109,11 @@ class TaskService
 
         $task['is_owner'] = ($task['owner_id'] == $userId);
         $task['is_assigned'] = ($task['assigned_to'] == $userId);
+        
+        // Permission flags for UI
+        $task['can_edit'] = $task['is_owner'] || $task['is_assigned'];
+        $task['can_delete'] = $task['is_owner'];
+        $task['assignee_name'] = $task['assigned_name'];
 
         return ['success' => true, 'data' => $task];
     }
@@ -132,23 +137,14 @@ class TaskService
             [$projectId]
         );
 
-        // Group by status for Kanban view
-        $grouped = [
-            'todo' => [],
-            'in_progress' => [],
-            'done' => []
-        ];
-
-        foreach ($tasks as $task) {
-            $grouped[$task['column_status']][] = $task;
+        // Add assignee_name alias for each task
+        foreach ($tasks as &$task) {
+            $task['assignee_name'] = $task['assigned_name'];
         }
 
         return [
             'success' => true,
-            'data' => [
-                'tasks' => $tasks,
-                'grouped' => $grouped
-            ]
+            'data' => $tasks
         ];
     }
 
