@@ -5,14 +5,10 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Auth\RegistrationService;
-use App\Auth\LoginService;
-use App\User\ProfileService;
+require_once __DIR__ . '/../includes/auth.php';
 
 // Set JSON content type
 header('Content-Type: application/json; charset=utf-8');
@@ -102,8 +98,7 @@ function handleRegister(): void
     
     $data = getRequestBody();
     
-    $service = new RegistrationService();
-    $result = $service->register([
+    $result = registerUser([
         'username' => $data['username'] ?? '',
         'email' => $data['email'] ?? '',
         'full_name' => $data['full_name'] ?? '',
@@ -113,14 +108,13 @@ function handleRegister(): void
     if ($result['success']) {
         jsonResponse([
             'success' => true,
-            'data' => $result['data'],
-            'message' => 'Đăng ký thành công'
+            'data' => ['user_id' => $result['user_id']],
+            'message' => $result['message']
         ], 201);
     } else {
         jsonResponse([
             'success' => false,
-            'error' => $result['error'],
-            'field' => $result['field'] ?? null
+            'error' => $result['error']
         ], 400);
     }
 }
@@ -137,8 +131,7 @@ function handleLogin(): void
     
     $data = getRequestBody();
     
-    $service = new LoginService();
-    $result = $service->login(
+    $result = authenticateUser(
         $data['identifier'] ?? $data['username'] ?? $data['email'] ?? '',
         $data['password'] ?? ''
     );
@@ -146,12 +139,12 @@ function handleLogin(): void
     if ($result['success']) {
         // Create session
         $remember = $data['remember'] ?? false;
-        loginUser($result['data'], $remember);
+        loginUser($result['user'], $remember);
         
         jsonResponse([
             'success' => true,
-            'data' => $result['data'],
-            'message' => 'Đăng nhập thành công'
+            'data' => $result['user'],
+            'message' => $result['message']
         ]);
     } else {
         jsonResponse([
@@ -195,8 +188,7 @@ function handleProfile(): void
     }
     
     $user = getCurrentUser();
-    $service = new ProfileService();
-    $profile = $service->getProfile($user['id']);
+    $profile = getUserById($user['user_id']);
     
     if ($profile) {
         jsonResponse([
@@ -225,31 +217,25 @@ function handleUpdateProfile(): void
     $user = getCurrentUser();
     $data = getRequestBody();
     
-    $service = new ProfileService();
-    $result = $service->updateProfile($user['id'], [
+    $result = updateUserProfile($user['user_id'], [
         'full_name' => $data['full_name'] ?? null,
         'email' => $data['email'] ?? null
     ]);
     
     if ($result['success']) {
         // Update session
-        if (isset($result['data']['full_name'])) {
-            $_SESSION['user']['full_name'] = $result['data']['full_name'];
-        }
-        if (isset($result['data']['email'])) {
-            $_SESSION['user']['email'] = $result['data']['email'];
-        }
+        $updatedUser = getUserById($user['user_id']);
+        $_SESSION['user'] = $updatedUser;
         
         jsonResponse([
             'success' => true,
-            'data' => $result['data'],
-            'message' => 'Cập nhật thành công'
+            'data' => $updatedUser,
+            'message' => $result['message']
         ]);
     } else {
         jsonResponse([
             'success' => false,
-            'error' => $result['error'],
-            'field' => $result['field'] ?? null
+            'error' => $result['error']
         ], 400);
     }
 }
@@ -271,9 +257,8 @@ function handleChangePassword(): void
     $user = getCurrentUser();
     $data = getRequestBody();
     
-    $service = new ProfileService();
-    $result = $service->updatePassword(
-        $user['id'],
+    $result = changeUserPassword(
+        $user['user_id'],
         $data['current_password'] ?? '',
         $data['new_password'] ?? ''
     );
@@ -286,8 +271,7 @@ function handleChangePassword(): void
     } else {
         jsonResponse([
             'success' => false,
-            'error' => $result['error'],
-            'field' => $result['field'] ?? null
+            'error' => $result['error']
         ], 400);
     }
 }

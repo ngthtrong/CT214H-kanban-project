@@ -15,4 +15,4 @@ logoutUser();
 flash('Bạn đã đăng xuất thành công.', 'info');
 
 // Redirect to login page
-redirect('/public/login.php');
+redirect('login.php');

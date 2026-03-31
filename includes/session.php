@@ -64,19 +64,20 @@ function getCurrentUserId(): ?int
 /**
  * Login user - set session data
  */
-function loginUser(array $userData): void
+function loginUser(array $userData, bool $remember = false): void
 {
     // Regenerate session ID to prevent session fixation
     session_regenerate_id(true);
     
-    $_SESSION['user_id'] = $userData['user_id'];
-    $_SESSION['username'] = $userData['username'];
-    $_SESSION['email'] = $userData['email'];
-    $_SESSION['full_name'] = $userData['full_name'];
+    // Support both 'id' and 'user_id' field names
+    $_SESSION['user_id'] = $userData['user_id'] ?? $userData['id'] ?? null;
+    $_SESSION['username'] = $userData['username'] ?? '';
+    $_SESSION['email'] = $userData['email'] ?? '';
+    $_SESSION['full_name'] = $userData['full_name'] ?? '';
     $_SESSION['avatar'] = $userData['avatar'] ?? null;
     $_SESSION['logged_in_at'] = time();
-    $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'];
-    $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+    $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'] ?? '';
+    $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
 }
 
 /**
@@ -135,7 +136,7 @@ function requireLogin(): void
 {
     if (!isLoggedIn()) {
         setFlash('warning', 'Vui lòng đăng nhập để tiếp tục');
-        redirect(APP_URL . '/login.php?redirect=' . urlencode(currentUrl()));
+        redirect('login.php');
     }
     
     // Check session timeout

@@ -147,11 +147,26 @@ function displayFlash(): string
     };
     
     return <<<HTML
-    <div class="alert {$alertClass} alert-dismissible fade show" role="alert">
+    <div class="alert {$alertClass}" role="alert">
         {$message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     HTML;
+}
+
+/**
+ * Display flash message (alias for displayFlash, echoes directly)
+ */
+function displayFlashMessage(): void
+{
+    echo displayFlash();
+}
+
+/**
+ * Set flash message (shorthand)
+ */
+function flash(string $message, string $type = 'info'): void
+{
+    setFlash($type, $message);
 }
 
 /**
@@ -236,7 +251,7 @@ function jsonResponse(array $data, int $statusCode = 200): void
 /**
  * CSRF token generation
  */
-function generateCsrfToken(): string
+function generateCSRFToken(): string
 {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -247,7 +262,7 @@ function generateCsrfToken(): string
 /**
  * CSRF token validation
  */
-function validateCsrfToken(?string $token): bool
+function verifyCSRFToken(?string $token): bool
 {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token ?? '');
 }
@@ -257,6 +272,6 @@ function validateCsrfToken(?string $token): bool
  */
 function csrfField(): string
 {
-    $token = generateCsrfToken();
+    $token = generateCSRFToken();
     return '<input type="hidden" name="csrf_token" value="' . $token . '">';
 }

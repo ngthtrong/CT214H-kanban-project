@@ -4,19 +4,16 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\User\ProfileService;
+require_once __DIR__ . '/../includes/auth.php';
 
 // Require authentication
 requireLogin();
 
-$profileService = new ProfileService();
 $user = getCurrentUser();
-$profile = $profileService->getProfile($user['id']);
+$profile = getUserById($user['user_id']);
 
 $errors = [];
 $success = '';
@@ -32,17 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         switch ($action) {
             case 'update_profile':
-                $result = $profileService->updateProfile($user['id'], [
+                $result = updateUserProfile($user['user_id'], [
                     'full_name' => $_POST['full_name'] ?? '',
                     'email' => $_POST['email'] ?? ''
                 ]);
                 
                 if ($result['success']) {
                     $success = 'Cập nhật thông tin thành công!';
-                    $profile = $result['data'];
+                    $profile = getUserById($user['user_id']);
                     // Update session
-                    $_SESSION['user']['full_name'] = $profile['full_name'];
-                    $_SESSION['user']['email'] = $profile['email'];
+                    $_SESSION['user'] = $profile;
                 } else {
                     $errors[] = $result['error'];
                 }
@@ -50,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'change_password':
-                $result = $profileService->updatePassword(
-                    $user['id'],
+                $result = changeUserPassword(
+                    $user['user_id'],
                     $_POST['current_password'] ?? '',
                     $_POST['new_password'] ?? ''
                 );
@@ -66,13 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'upload_avatar':
                 if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] !== UPLOAD_ERR_NO_FILE) {
-                    $result = $profileService->uploadAvatar($user['id'], $_FILES['avatar']);
+                    $result = uploadUserAvatar($user['user_id'], $_FILES['avatar']);
                     
                     if ($result['success']) {
                         $success = 'Cập nhật avatar thành công!';
-                        $profile = $result['data']['profile'];
+                        $profile = getUserById($user['user_id']);
                         // Update session
-                        $_SESSION['user']['avatar'] = $profile['avatar'];
+                        $_SESSION['user'] = $profile;
                     } else {
                         $errors[] = $result['error'];
                     }

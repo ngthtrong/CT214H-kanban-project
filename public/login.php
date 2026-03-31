@@ -4,16 +4,14 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Auth\LoginService;
+require_once __DIR__ . '/../includes/auth.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('/public/index.php');
+    redirect('index.php');
 }
 
 $errors = [];
@@ -30,15 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $remember = isset($_POST['remember']);
         
         // Attempt login
-        $service = new LoginService();
-        $result = $service->login($identifier, $password);
+        $result = authenticateUser($identifier, $password);
         
         if ($result['success']) {
             // Login successful - create session
-            loginUser($result['data'], $remember);
+            loginUser($result['user'], $remember);
             
             // Redirect to intended page or dashboard
-            $redirectTo = $_GET['redirect'] ?? '/public/index.php';
+            $redirectTo = $_GET['redirect'] ?? 'index.php';
             redirect($redirectTo);
         } else {
             $errors[] = $result['error'];

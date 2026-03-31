@@ -4,16 +4,14 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Auth\RegistrationService;
+require_once __DIR__ . '/../includes/auth.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('/public/index.php');
+    redirect('index.php');
 }
 
 $errors = [];
@@ -44,13 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Mật khẩu xác nhận không khớp';
         } else {
             // Register user
-            $service = new RegistrationService();
-            $result = $service->register($formData);
+            $result = registerUser($formData);
             
             if ($result['success']) {
                 $success = true;
                 flash('Đăng ký thành công! Bạn có thể đăng nhập ngay.', 'success');
-                redirect('/public/login.php');
+                redirect('login.php');
             } else {
                 $errors[] = $result['error'];
             }

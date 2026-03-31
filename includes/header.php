@@ -22,7 +22,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Team Kanban - Hệ thống quản lý dự án nhóm">
-    <meta name="csrf-token" content="<?= generateCsrfToken() ?>">
+    <meta name="csrf-token" content="<?= generateCSRFToken() ?>">
     
     <title><?= isset($pageTitle) ? sanitize($pageTitle) . ' - ' : '' ?><?= APP_NAME ?></title>
     
