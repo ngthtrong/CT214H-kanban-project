@@ -46,7 +46,9 @@ async function loadTasks(filters = {}) {
         if (filters.search) params.append('search', filters.search);
         if (filters.status) params.append('status', filters.status);
         if (filters.priority) params.append('priority', filters.priority);
-        if (filters.assigned_to !== undefined) params.append('assigned_to', filters.assigned_to);
+        if (filters.assigned_to !== undefined && filters.assigned_to !== '') {
+            params.append('assigned_to', filters.assigned_to);
+        }
         
         const response = await fetch(`/CT214H-kanban-project/api/tasks.php?${params}`);
         const result = await response.json();
@@ -55,7 +57,21 @@ async function loadTasks(filters = {}) {
             throw new Error(result.error);
         }
         
-        currentTasks = result.data;
+        // Handle both formats: array of tasks OR object with tasks property
+        if (Array.isArray(result.data)) {
+            currentTasks = result.data;
+        } else if (result.data && Array.isArray(result.data.tasks)) {
+            currentTasks = result.data.tasks;
+            // Add assignee_name alias if not present
+            currentTasks.forEach(task => {
+                if (!task.assignee_name && task.assigned_name) {
+                    task.assignee_name = task.assigned_name;
+                }
+            });
+        } else {
+            currentTasks = [];
+        }
+        
         currentFilters = filters;
         
         renderBoard();
