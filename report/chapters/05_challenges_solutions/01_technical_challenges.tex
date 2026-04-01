@@ -10,13 +10,13 @@
 \midrule
 Role-aware authorization across many actions &
 Unauthorized edits, inconsistent behavior by endpoint &
-Service-layer checks in \code{ProjectService}, \code{MemberService}, and \code{TaskService} enforce owner/member boundaries before DB updates. \\
+Permission checks in \code{includes/project-functions.php}, \code{includes/member-functions.php}, and \code{includes/task-functions.php} enforce owner/member boundaries before DB updates. \\
 Drag-and-drop status updates in unreliable networks &
 UI state can diverge from persisted state &
 Optimistic UI update with explicit rollback in \code{js/kanban.js} when API update fails. \\
 Attachment upload security &
 Malicious file types and oversized uploads &
-Extension and MIME checks plus 5MB limit in \code{FileUploadService}; controlled upload directories and generated filenames. \\
+Extension and MIME checks plus 5MB limit in \code{includes/upload-functions.php}; controlled upload directories and generated filenames. \\
 Join request duplication and race conditions &
 Duplicate member records and inconsistent pending states &
 Unique constraints and pending-request checks in DB and service logic; owner approval path consolidates requests safely. \\
@@ -25,7 +25,7 @@ Orphaned attachment files and inconsistent cleanup &
 Attachment cleanup routine before project deletion and FK cascade for relational records. \\
 Search/filter scaling on larger task sets &
 Slow responses and noisy payloads &
-AND-composed filters with index-backed columns and pagination metadata from \code{SearchService}. \\
+AND-composed filters with index-backed columns and pagination metadata from \code{includes/task-functions.php} (\code{searchProjectTasks}). \\
 \bottomrule
 \end{tabularx}
 \end{table}

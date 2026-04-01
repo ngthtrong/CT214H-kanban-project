@@ -1,4 +1,4 @@
-@startuml
+@startuml component-interaction
 title Component interaction from UI events to persistent storage
 
 top to bottom direction
@@ -18,10 +18,10 @@ skinparam database {
   FontColor #1F2937
 }
 
-rectangle "Browser UI\npublic/*.php" as UI #E8F2FF
-rectangle "Client Logic\njs/dashboard.js\njs/kanban.js" as JS #EDF7FF
+rectangle "Browser UI\nindex.php, project.php, ..." as UI #E8F2FF
+rectangle "Client Logic\njs/dashboard.js\njs/kanban.js\njs/search-filter.js" as JS #EDF7FF
 rectangle "REST Endpoints\napi/*.php" as API #EAF9EA
-rectangle "Service Layer\nsrc/*/*Service.php" as SVC #F6F6F6
+rectangle "Domain Logic\nincludes/*-functions.php" as SVC #F6F6F6
 database "MySQL Storage\nusers, projects,\nproject_members,\nproject_join_requests,\ntasks" as DB #FFE7D6
 rectangle "Shared Utilities\nincludes/*.php" as INC #FFF4E8
 

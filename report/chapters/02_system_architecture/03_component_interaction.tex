@@ -1,6 +1,6 @@
 \section{Component Interaction}
 
-The project combines page controllers, asynchronous API calls, and service-layer validation.
+The project combines page controllers, asynchronous API calls, and domain-module validation.
 The interaction design is centered on JavaScript-driven user actions that call API endpoints,
 then refresh UI state through returned JSON payloads.
 
@@ -11,7 +11,7 @@ then refresh UI state through returned JSON payloads.
 Key architecture behaviors observed in source code:
 \begin{itemize}
     \item \code{api/*.php} performs request method dispatch and authentication checks.
-    \item \code{src/*/*Service.php} centralizes permission checks and validation logic.
+    \item \code{includes/project-functions.php}, \code{includes/member-functions.php}, and \code{includes/task-functions.php} centralize permission checks and validation logic.
     \item \code{includes/session.php} enforces session integrity and timeout control.
     \item \code{js/kanban.js} applies optimistic UI updates and rollback for drag-and-drop failures.
 \end{itemize}

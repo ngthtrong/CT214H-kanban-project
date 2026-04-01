@@ -5,10 +5,10 @@
     flow/.style={-{Latex[length=2.6mm]},thick}
 ]
     \node[layer,fill=blue!10] (presentation) at (0,3.0)
-    {\textbf{Presentation Layer}\\HTML pages in \code{public/}, JavaScript in \code{js/}, and CSS in \code{css/}};
+    {\textbf{Presentation Layer}\\Root PHP pages (\code{index.php}, \code{project.php}, ...) with JavaScript in \code{js/} and CSS in \code{css/}};
 
     \node[layer,fill=green!10] (application) at (0,0.9)
-    {\textbf{Application Layer}\\REST endpoints in \code{api/} with business services in \code{src/}};
+    {\textbf{Application Layer}\\REST endpoints in \code{api/} with domain logic in \code{includes/*-functions.php}};
 
     \node[layer,fill=orange!12] (data) at (0,-1.2)
     {\textbf{Data Layer}\\PDO helpers in \code{includes/db-connect.php} and MySQL relational schema};
