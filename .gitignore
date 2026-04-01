@@ -12,6 +12,7 @@ coverage/
 .coverage
 .php-cs-fixer.cache
 .phpmd-cache
+.phpunit.result.cache
 
 # IDE & Editor
 .vscode/

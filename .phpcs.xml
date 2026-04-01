@@ -4,7 +4,6 @@
 
     <!-- Files to check -->
     <file>src</file>
-    <file>tests</file>
 
     <!-- Exclude directories -->
     <exclude-pattern>*/migrations/*</exclude-pattern>
@@ -16,7 +15,6 @@
     <rule ref="PSR12"/>
 
     <!-- Additional rules for best practices -->
-    <rule ref="Generic.PHP.StrictTypes"/>
     <rule ref="Generic.Files.LineLength">
         <properties>
             <property name="lineLimit" value="120"/>

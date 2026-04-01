@@ -11,7 +11,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('index.php');
+    redirect('dashboard.php');
 }
 
 $errors = [];
