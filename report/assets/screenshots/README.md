@@ -3,6 +3,7 @@
 Place application screenshots in this folder and keep file names aligned with the placeholders in the LaTeX report.
 
 Recommended naming examples:
+
 - login-page.png
 - register-page.png
 - dashboard-page.png
