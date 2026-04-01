@@ -1,0 +1,29 @@
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    entity/.style={draw,rounded corners,fill=gray!8,text width=4.0cm,minimum height=1.35cm,align=center,font=\footnotesize},
+    rel/.style={-{Latex[length=2.5mm]},thick}
+]
+    \node[entity] (users) at (-6.0,3.0) {\textbf{users}\\PK: user\_id};
+    \node[entity] (projects) at (0.0,3.0) {\textbf{projects}\\PK: project\_id\\FK: owner\_id};
+    \node[entity] (tasks) at (6.0,3.0) {\textbf{tasks}\\PK: task\_id\\FK: project\_id, assigned\_to};
+
+    \node[entity] (members) at (-3.2,-1.4) {\textbf{project\_members}\\PK: member\_id\\FK: project\_id, user\_id};
+    \node[entity] (requests) at (3.2,-1.4) {\textbf{project\_join\_requests}\\PK: request\_id\\FK: project\_id, user\_id};
+
+    \draw[rel] (users.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{1..* owns} (projects.west);
+    \draw[rel] (projects.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{1..* contains} (tasks.west);
+
+    \draw[rel] (users.south) |- node[pos=0.30,left,font=\scriptsize,fill=white,inner sep=1pt]{1..* joins} (members.north west);
+    \draw[rel] (projects.south west) |- node[pos=0.28,right,font=\scriptsize,fill=white,inner sep=1pt]{1..* has} (members.north east);
+
+    \draw[rel] (users.south east) to[out=-25,in=165] node[midway,below,font=\scriptsize,fill=white,inner sep=1pt]{1..* requests} (requests.west);
+    \draw[rel] (projects.south east) |- node[pos=0.30,right,font=\scriptsize,fill=white,inner sep=1pt]{1..* receives} (requests.north west);
+
+    \draw[rel] (users.north east) to[out=22,in=158] node[above,font=\scriptsize,fill=white,inner sep=1pt]{0..* assigned} (tasks.north west);
+\end{tikzpicture}%
+}
+\caption{ERD overview derived from \code{database/schema.sql}}
+\label{fig:erd-overview}
+\end{figure}

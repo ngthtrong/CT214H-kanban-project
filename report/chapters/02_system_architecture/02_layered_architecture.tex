@@ -1,0 +1,13 @@
+\section{Layered Architecture}
+
+The implementation follows a three-layer architecture:
+\begin{itemize}
+    \item \textbf{Presentation Layer}: server-rendered pages and client-side interactions.
+    \item \textbf{Application Layer}: API routing and feature services.
+    \item \textbf{Data Layer}: MySQL schema, integrity constraints, and transactional data access.
+\end{itemize}
+
+\input{diagrams/system-layered-architecture}
+
+\diagramnote{This architecture separates UI concerns from business rules and persistence,
+which reduces feature coupling and helps each module evolve independently.}

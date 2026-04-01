@@ -1,0 +1,32 @@
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    box/.style={draw,rounded corners,align=center,minimum height=1.25cm,text width=3.4cm,fill=gray!10,font=\footnotesize},
+    arr/.style={-{Latex[length=2.5mm]},thick}
+]
+    \node[box,fill=blue!10] (ui) at (-6.0,2.5) {Browser UI\\\code{public/*.php}};
+    \node[box,fill=blue!6] (js) at (0.0,2.5) {Client Logic\\\code{js/dashboard.js} and \\\code{js/kanban.js}};
+    \node[box,fill=green!10] (api) at (6.0,2.5) {REST Endpoints\\\code{api/*.php}};
+
+    \node[box,fill=orange!12] (inc) at (-6.0,-1.4) {Shared Utilities\\\code{includes/*.php}};
+    \node[box,fill=green!6] (svc) at (0.0,-1.4) {Service Layer\\\code{src/*/*Service.php}};
+    \node[box,fill=orange!20] (db) at (6.0,-1.4) {MySQL Database\\\code{users/projects/tasks}};
+
+    \draw[arr] (ui.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{user actions} (js.west);
+    \draw[arr] (js.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{HTTP fetch} (api.west);
+
+    \draw[arr] (api.south) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{dispatch + authorization} (svc.north);
+    \draw[arr] (svc.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{SQL via PDO helper} (db.west);
+
+    \draw[arr] (inc.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{session + helper utilities} (svc.west);
+
+    \draw[arr] (db.south west) to[bend right=18] node[below,font=\scriptsize,fill=white,inner sep=1pt]{result set} (svc.south east);
+    \draw[arr] (svc.north east) to[bend left=18] node[right,font=\scriptsize,fill=white,inner sep=1pt]{JSON payload} (api.south east);
+    \draw[arr] (api.north west) to[bend left=14] node[above,font=\scriptsize,fill=white,inner sep=1pt]{response body} (js.north east);
+    \draw[arr] (js.south west) to[bend right=14] node[below,font=\scriptsize,fill=white,inner sep=1pt]{DOM update} (ui.south east);
+\end{tikzpicture}%
+}
+\caption{Component interaction from UI events to persistent storage}
+\label{fig:component-interaction}
+\end{figure}

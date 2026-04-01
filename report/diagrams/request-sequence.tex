@@ -1,0 +1,31 @@
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    actor/.style={draw,rounded corners,minimum width=2.2cm,minimum height=0.9cm,align=center,fill=blue!10,font=\footnotesize},
+    lifeline/.style={dashed,gray},
+    msg/.style={-{Latex[length=2.5mm]},thick}
+]
+    \node[actor] (user) at (0,0) {User};
+    \node[actor] (browser) at (3.0,0) {Browser\\JS};
+    \node[actor] (api) at (6.0,0) {API};
+    \node[actor] (service) at (9.0,0) {Service};
+    \node[actor] (mysql) at (12.0,0) {MySQL};
+
+    \draw[lifeline] (user.south) -- +(0,-7.4);
+    \draw[lifeline] (browser.south) -- +(0,-7.4);
+    \draw[lifeline] (api.south) -- +(0,-7.4);
+    \draw[lifeline] (service.south) -- +(0,-7.4);
+    \draw[lifeline] (mysql.south) -- +(0,-7.4);
+
+    \draw[msg] (0,-1.1) -- node[above,font=\scriptsize]{click/submit} (3.0,-1.1);
+    \draw[msg] (3.0,-2.0) -- node[above,font=\scriptsize]{HTTP request} (6.0,-2.0);
+    \draw[msg] (6.0,-2.9) -- node[above,font=\scriptsize]{route + auth check} (9.0,-2.9);
+    \draw[msg] (9.0,-3.8) -- node[above,font=\scriptsize]{prepared query} (12.0,-3.8);
+    \draw[msg] (12.0,-4.7) -- node[above,font=\scriptsize]{rows/status} (9.0,-4.7);
+    \draw[msg] (9.0,-5.6) -- node[above,font=\scriptsize]{business output} (6.0,-5.6);
+    \draw[msg] (6.0,-6.5) -- node[above,font=\scriptsize]{JSON response} (3.0,-6.5);
+    \draw[msg] (3.0,-7.2) -- node[above,font=\scriptsize]{render update} (0,-7.2);
+\end{tikzpicture}
+\caption{Generic runtime sequence for user-driven API operations}
+\label{fig:request-sequence}
+\end{figure}
