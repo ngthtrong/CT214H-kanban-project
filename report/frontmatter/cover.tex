@@ -1,4 +1,13 @@
 \begin{titlepage}
+    \begin{tikzpicture}[remember picture, overlay]
+        \draw[line width=1.6pt,black]
+            ([xshift=1.1cm,yshift=-1.1cm]current page.north west) rectangle
+            ([xshift=-1.1cm,yshift=1.1cm]current page.south east);
+        \draw[line width=0.5pt,black]
+            ([xshift=1.45cm,yshift=-1.45cm]current page.north west) rectangle
+            ([xshift=-1.45cm,yshift=1.45cm]current page.south east);
+    \end{tikzpicture}
+
     \centering
 
     {\Large \UniversityName \\}

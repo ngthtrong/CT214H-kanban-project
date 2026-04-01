@@ -1,0 +1,90 @@
+@startuml
+title ERD overview derived from database/schema.sql
+
+hide circle
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowThickness 1.1
+skinparam ranksep 70
+skinparam nodesep 55
+skinparam entity {
+  BorderColor #4B5563
+  FontColor #111827
+  BackgroundColor #F8FAFC
+}
+
+entity "users" as users {
+  * user_id : INT <<PK>>
+  --
+  username : VARCHAR(50) <<UNIQUE>>
+  email : VARCHAR(100) <<UNIQUE>>
+  password : VARCHAR(255)
+  full_name : VARCHAR(100)
+  avatar : VARCHAR(255) [NULL]
+  created_at : TIMESTAMP
+}
+
+entity "projects" as projects {
+  * project_id : INT <<PK>>
+  --
+  owner_id : INT <<FK users.user_id>>
+  project_name : VARCHAR(100)
+  description : TEXT [NULL]
+  project_code : VARCHAR(10) <<UNIQUE>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "project_members" as members {
+  * member_id : INT <<PK>>
+  --
+  project_id : INT <<FK projects.project_id>>
+  user_id : INT <<FK users.user_id>>
+  role : ENUM(owner, member)
+  joined_at : TIMESTAMP
+  UNIQUE(project_id, user_id)
+}
+
+entity "project_join_requests" as requests {
+  * request_id : INT <<PK>>
+  --
+  project_id : INT <<FK projects.project_id>>
+  user_id : INT <<FK users.user_id>>
+  status : ENUM(pending, approved, rejected)
+  requested_at : TIMESTAMP
+  responded_at : TIMESTAMP [NULL]
+  UNIQUE(project_id, user_id, status)
+}
+
+entity "tasks" as tasks {
+  * task_id : INT <<PK>>
+  --
+  project_id : INT <<FK projects.project_id>>
+  assigned_to : INT <<FK users.user_id, NULL>>
+  task_title : VARCHAR(200)
+  description : TEXT [NULL]
+  column_status : ENUM(todo, in_progress, done)
+  priority : ENUM(low, medium, high)
+  due_date : DATE [NULL]
+  attachment_path : VARCHAR(255) [NULL]
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+users -[hidden]right- projects
+projects -[hidden]right- tasks
+members -[hidden]right- requests
+projects -[hidden]down- members
+tasks -[hidden]down- requests
+
+users ||--o{ projects : owns
+projects ||--o{ tasks : contains
+projects ||--o{ members : has
+users ||--o{ members : joins
+projects ||--o{ requests : receives
+users ||--o{ requests : submits
+users ||--o{ tasks : assigned_to
+
+@enduml

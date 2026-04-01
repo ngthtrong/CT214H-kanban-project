@@ -1,0 +1,54 @@
+@startuml
+title UC2 activity flow: project lifecycle management
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam activity {
+  BorderColor #4B5563
+  BackgroundColor #F8FAFC
+  DiamondBackgroundColor #FEF9C3
+}
+
+start
+:Receive project operation request;
+
+switch (Operation type)
+case (Create)
+  :Validate project fields;
+  :Generate unique 8-char project_code;
+  :Insert project record;
+  :Auto-add creator to project_members\nwith role owner;
+  :Return created project context;
+case (View)
+  :Check requester membership;
+  if (Member of project?) then (yes)
+    :Load project details,\nstatistics, and board data;
+  else (no)
+    :Return authorization error;
+    stop
+  endif
+case (Update)
+  :Check requester ownership;
+  if (Requester is owner?) then (yes)
+    :Validate update payload;
+    :Persist project changes;
+  else (no)
+    :Return authorization error;
+    stop
+  endif
+case (Delete)
+  :Check requester ownership;
+  if (Requester is owner?) then (yes)
+    :Delete task attachments first;
+    :Delete project record\n(cascade to members, requests, tasks);
+  else (no)
+    :Return authorization error;
+    stop
+  endif
+endswitch
+
+:Project workflow completed;
+stop
+
+@enduml

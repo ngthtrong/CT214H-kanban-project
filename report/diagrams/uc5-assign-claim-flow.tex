@@ -1,46 +1,6 @@
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    box/.style={draw,rounded corners,align=center,text width=4.3cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    widebox/.style={draw,rounded corners,align=center,text width=5.4cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    decision/.style={draw,diamond,aspect=2.2,align=center,text width=3.0cm,inner sep=1pt,fill=yellow!15,font=\footnotesize},
-    arr/.style={-{Latex[length=2.3mm]},thick}
-]
-    \node[widebox] (start) at (0,6.9) {Assignment-related action requested};
-    \node[decision] (role) at (0,5.3) {Requester role?};
-
-    \node[box] (ownerAssign) at (-5.6,3.6) {Owner assigns member or unassigns task};
-    \node[decision] (memberValid) at (-5.6,2.0) {Selected assignee is a project member?};
-    \node[box] (ownerSave) at (-5.6,0.4) {Persist \code{assigned\_to} update};
-
-    \node[box] (memberClaim) at (5.6,3.6) {Member requests to claim task};
-    \node[decision] (unassigned) at (5.6,2.0) {Task is currently unassigned?};
-    \node[box] (claimSave) at (5.6,0.4) {Assign task to requesting member};
-
-    \node[widebox] (error) at (0,-1.1) {Return role/assignment conflict error};
-    \node[widebox] (end) at (0,-2.5) {Assignment workflow completed};
-
-    \coordinate (ownerRejectBypass) at (-8.0,2.0);
-    \coordinate (memberRejectBypass) at (8.0,2.0);
-
-    \draw[arr] (start) -- (role);
-    \draw[arr] (role) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{owner} (ownerAssign);
-    \draw[arr] (role) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{member} (memberClaim);
-
-    \draw[arr] (ownerAssign) -- (memberValid);
-    \draw[arr] (memberValid) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{yes} (ownerSave);
-    \draw[arr] (memberValid.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{no} (ownerRejectBypass) |- (error.west);
-
-    \draw[arr] (memberClaim) -- (unassigned);
-    \draw[arr] (unassigned) -- node[left,font=\scriptsize,fill=white,inner sep=1pt]{yes} (claimSave);
-    \draw[arr] (unassigned.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{no} (memberRejectBypass) |- (error.east);
-
-    \draw[arr] (ownerSave) |- (end.west);
-    \draw[arr] (claimSave) |- (end.east);
-    \draw[arr] (error) -- (end);
-\end{tikzpicture}%
-}
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/uc5-assign-claim-flow.pdf}
 \caption{UC5 activity flow: owner assignment and member claim behavior}
 \label{fig:uc5-assign-claim-flow}
 \end{figure}

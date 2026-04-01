@@ -1,45 +1,6 @@
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    actor/.style={draw,rounded corners,minimum width=2.4cm,minimum height=1.0cm,fill=blue!10,align=center,font=\small},
-    uc/.style={draw,ellipse,text width=2.5cm,minimum height=1.2cm,align=center,fill=gray!8,font=\small},
-    assoc/.style={thick},
-    dep/.style={dashed,-{Latex[length=2.0mm]},thick,gray!70},
-    system/.style={draw,rounded corners,minimum width=14.0cm,minimum height=8.8cm}
-]
-    \node[system] (sys) at (3.9,0.0) {};
-    \node[font=\small\bfseries] at (3.9,3.9) {Team Kanban System};
-
-    \node[actor] (owner) at (-3.4,2.0) {Project\\Owner};
-    \node[actor] (member) at (-3.4,-2.0) {Project\\Member};
-
-    \node[uc] (uc1) at (0.6,2.9) {UC1\\Authentication};
-    \node[uc] (uc2) at (3.9,2.9) {UC2\\Project\\Management};
-    \node[uc] (uc3) at (7.2,2.9) {UC3\\Member\\Management};
-
-    \node[uc] (uc4) at (0.6,-1.1) {UC4\\Task\\Management};
-    \node[uc] (uc5) at (3.9,-1.1) {UC5\\Assign / Claim\\Tasks};
-    \node[uc] (uc6) at (7.2,-1.1) {UC6\\Search / Filter};
-
-    \draw[assoc] (owner.east) -- (uc1.west);
-    \draw[assoc] (owner.east) to[out=8,in=172] (uc2.west);
-    \draw[assoc] (owner.east) to[out=14,in=172] (uc3.west);
-    \draw[assoc] (owner.east) to[out=-8,in=172] (uc4.west);
-    \draw[assoc] (owner.east) to[out=-12,in=172] (uc5.west);
-
-    \draw[assoc] (member.east) to[out=18,in=188] (uc1.west);
-    \draw[assoc] (member.east) -- (uc4.west);
-    \draw[assoc] (member.east) to[out=4,in=190] (uc5.west);
-    \draw[assoc] (member.east) to[out=8,in=188] (uc6.west);
-
-    \draw[dep] (uc2.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{requires} (uc1.east);
-    \draw[dep] (uc3.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{requires} (uc2.east);
-    \draw[dep] (uc4.north east) to[out=34,in=-70] node[right,font=\scriptsize,fill=white,inner sep=1pt]{requires} (uc2.south east);
-    \draw[dep] (uc5.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{extends} (uc4.east);
-    \draw[dep] (uc6.south) -- ++(0,-0.9) -| node[pos=0.22,below,font=\scriptsize,fill=white,inner sep=1pt]{extends} (uc4.south);
-\end{tikzpicture}%
-}
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/usecase-overview.pdf}
 \caption{Use-case overview (UC1 to UC6)}
 \label{fig:usecase-overview}
 \end{figure}

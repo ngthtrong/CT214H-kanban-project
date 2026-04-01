@@ -1,49 +1,13 @@
+\clearpage
+\begin{landscape}
+\thispagestyle{landscapefancy}
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    box/.style={draw,rounded corners,align=center,text width=4.3cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    widebox/.style={draw,rounded corners,align=center,text width=5.2cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    decision/.style={draw,diamond,aspect=2.2,align=center,text width=2.9cm,inner sep=1pt,fill=yellow!15,font=\footnotesize},
-    arr/.style={-{Latex[length=2.3mm]},thick}
-]
-    \node[widebox] (start) at (0,6.8) {Member-related request received};
-    \node[decision] (type) at (0,5.2) {Flow type?};
-
-    \node[box] (invite) at (-5.6,3.4) {Owner adds member by username/email};
-    \node[decision] (existing) at (-5.6,1.8) {Already member or pending request?};
-    \node[box] (addok) at (-5.6,0.2) {Insert into \code{project\_members} or auto-approve pending request};
-
-    \node[box] (joinReq) at (0,3.4) {User submits join request by project code};
-
-    \node[box] (review) at (5.6,3.4) {Owner reviews pending join requests};
-    \node[decision] (decision2) at (5.6,1.8) {Approve or reject?};
-    \node[box] (result) at (5.6,0.2) {Update request status and add member on approval};
-
-    \node[widebox] (error) at (0,-1.6) {Return permission or duplication error};
-    \node[widebox] (end) at (0,-3.1) {Member workflow completed};
-
-    \coordinate (conflictBypass) at (-8.0,1.8);
-    \coordinate (joinBypass) at (6.9,3.4);
-
-    \draw[arr] (start) -- (type);
-    \draw[arr] (type) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{owner add} (invite);
-    \draw[arr] (type) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{join request} (joinReq);
-    \draw[arr] (type) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{owner review} (review);
-
-    \draw[arr] (invite) -- (existing);
-    \draw[arr] (existing) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{no conflict} (addok);
-    \draw[arr] (existing.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{conflict} (conflictBypass) |- (error.west);
-
-    \draw[arr] (review) -- (decision2);
-    \draw[arr] (decision2) -- node[left,font=\scriptsize,fill=white,inner sep=1pt]{approve/reject} (result);
-
-    \draw[arr] (joinReq.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{pending} (joinBypass) |- (end.north);
-    \draw[arr] (addok) |- (end.west);
-    \draw[arr] (result) |- (end.east);
-    \draw[arr] (error) -- (end);
-\end{tikzpicture}%
+\makebox[\linewidth][c]{%
+\includegraphics[width=0.90\paperheight,height=0.90\paperwidth,keepaspectratio]{diagrams/generated/uc3-member-flow.pdf}%
 }
 \caption{UC3 activity flow: member invitation and join requests}
 \label{fig:uc3-member-flow}
 \end{figure}
+\end{landscape}
+\clearpage

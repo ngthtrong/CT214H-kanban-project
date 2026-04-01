@@ -1,47 +1,13 @@
+\clearpage
+\begin{landscape}
+\thispagestyle{landscapefancy}
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    box/.style={draw,rounded corners,align=center,text width=4.4cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    widebox/.style={draw,rounded corners,align=center,text width=5.4cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    decision/.style={draw,diamond,aspect=2.2,align=center,text width=3.1cm,inner sep=1pt,fill=yellow!15,font=\footnotesize},
-    arr/.style={-{Latex[length=2.3mm]},thick}
-]
-    \node[widebox] (start) at (0,7.4) {User performs task operation (create, view, edit, delete, move)};
-    \node[decision] (access) at (0,5.8) {User is project member?};
-    \node[decision] (perm) at (0,4.3) {Owner or assigned member?};
-
-    \node[box] (crud) at (-5.9,2.6) {Apply validated create or update operation};
-    \node[box] (status) at (-5.9,1.0) {If drag-drop: update \code{column\_status} via API};
-
-    \node[box] (upload) at (5.9,2.6) {Validate attachment and apply upload rules};
-
-    \node[decision] (deleteCheck) at (0,1.0) {Delete requested by owner?};
-    \node[box] (deleteDo) at (-5.9,-0.6) {Delete attachment file then delete task record};
-    \node[widebox] (error) at (5.9,-0.6) {Return permission or validation error};
-    \node[widebox] (end) at (0,-2.2) {Task workflow completed};
-
-    \coordinate (denyAccessBypass) at (8.7,5.8);
-    \coordinate (denyPermBypass) at (8.7,4.3);
-
-    \draw[arr] (start) -- (access);
-    \draw[arr] (access) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{yes} (perm);
-    \draw[arr] (access.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{no} (denyAccessBypass) |- (error.north);
-
-    \draw[arr] (perm) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{edit/move} (crud);
-    \draw[arr] (perm) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{upload} (upload);
-    \draw[arr] (perm.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{forbidden} (denyPermBypass) |- (error.north);
-    \draw[arr] (crud) -- (status);
-
-    \draw[arr] (status.east) -- ++(1.6,0) |- node[pos=0.35,above,font=\scriptsize,fill=white,inner sep=1pt]{status updated} (deleteCheck.west);
-    \draw[arr] (upload.west) -- ++(-1.6,0) |- node[pos=0.35,right,font=\scriptsize,fill=white,inner sep=1pt]{upload validated} (deleteCheck.east);
-
-    \draw[arr] (deleteCheck) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{yes} (deleteDo);
-    \draw[arr] (deleteCheck) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{no} (end);
-    \draw[arr] (deleteDo) |- (end.west);
-    \draw[arr] (error) |- (end.east);
-\end{tikzpicture}%
+\makebox[\linewidth][c]{%
+\includegraphics[width=0.90\paperheight,height=0.90\paperwidth,keepaspectratio]{diagrams/generated/uc4-task-flow.pdf}%
 }
 \caption{UC4 activity flow: task CRUD and board status transitions}
 \label{fig:uc4-task-flow}
 \end{figure}
+\end{landscape}
+\clearpage

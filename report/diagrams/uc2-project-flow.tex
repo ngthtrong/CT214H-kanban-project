@@ -1,46 +1,13 @@
+\clearpage
+\begin{landscape}
+\thispagestyle{landscapefancy}
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    box/.style={draw,rounded corners,align=center,text width=4.3cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    widebox/.style={draw,rounded corners,align=center,text width=5.2cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    decision/.style={draw,diamond,aspect=2.2,align=center,text width=3.0cm,inner sep=1pt,fill=yellow!15,font=\footnotesize},
-    arr/.style={-{Latex[length=2.3mm]},thick}
-]
-    \node[widebox] (start) at (0,6.6) {User triggers project operation};
-    \node[decision] (op) at (0,5.1) {Operation type?};
-
-    \node[box] (create) at (-5.6,3.4) {Create project and generate 8-character code};
-    \node[box] (owneradd) at (-5.6,1.8) {Auto-add creator into \code{project\_members} as owner};
-
-    \node[box] (view) at (0,3.4) {Load project details, statistics, and role context};
-
-    \node[box] (updateDelete) at (5.6,3.4) {Update or delete requested project};
-    \node[decision] (ownercheck) at (5.6,1.8) {Requester is owner?};
-    \node[box] (deleteFlow) at (5.6,0.2) {If deleting: remove attachments then apply cascade delete};
-
-    \node[widebox] (error) at (0,-1.4) {Reject request with authorization error};
-    \node[widebox] (end) at (0,-2.9) {Project workflow completed};
-
-    \coordinate (denyBypass) at (8.2,1.8);
-    \coordinate (viewBypass) at (-7.0,3.4);
-
-    \draw[arr] (start) -- (op);
-    \draw[arr] (op) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{create} (create);
-    \draw[arr] (op) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{view} (view);
-    \draw[arr] (op) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{update/delete} (updateDelete);
-
-    \draw[arr] (create) -- (owneradd);
-    \draw[arr] (updateDelete) -- (ownercheck);
-    \draw[arr] (ownercheck) -- node[left,font=\scriptsize,fill=white,inner sep=1pt]{yes} (deleteFlow);
-    \draw[arr] (ownercheck.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{no} (denyBypass) |- (error.east);
-
-    \draw[arr] (owneradd) |- (end.west);
-    \draw[arr] (view.west) -- (viewBypass) |- (end.north);
-    \draw[arr] (deleteFlow) |- (end.east);
-    \draw[arr] (error) -- (end);
-\end{tikzpicture}%
+\makebox[\linewidth][c]{%
+\includegraphics[width=0.90\paperheight,height=0.90\paperwidth,keepaspectratio]{diagrams/generated/uc2-project-flow.pdf}%
 }
 \caption{UC2 activity flow: project lifecycle management}
 \label{fig:uc2-project-flow}
 \end{figure}
+\end{landscape}
+\clearpage

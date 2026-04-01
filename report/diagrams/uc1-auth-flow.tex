@@ -1,46 +1,6 @@
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    box/.style={draw,rounded corners,align=center,text width=4.2cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    widebox/.style={draw,rounded corners,align=center,text width=5.0cm,minimum height=0.95cm,fill=gray!8,font=\footnotesize},
-    decision/.style={draw,diamond,aspect=2.2,align=center,text width=3.0cm,inner sep=1pt,fill=yellow!15,font=\footnotesize},
-    arr/.style={-{Latex[length=2.3mm]},thick}
-]
-    \node[widebox] (start) at (0,6.4) {User opens login or registration page};
-    \node[decision] (choice) at (0,4.9) {Register new account?};
-
-    \node[box] (register1) at (-5.3,3.2) {Validate registration fields};
-    \node[decision] (duplicate) at (-5.3,1.6) {Username or email already exists?};
-    \node[box] (register2) at (-5.3,0.0) {Hash password and insert user record};
-
-    \node[box] (login1) at (5.3,3.2) {Validate identifier and password};
-    \node[decision] (validlogin) at (5.3,1.6) {Credentials valid?};
-    \node[box] (login2) at (5.3,0.0) {Create secure session and redirect};
-
-    \node[widebox] (error) at (0,-1.6) {Return validation/authentication error to UI};
-    \node[widebox] (end) at (0,-3.0) {Authentication workflow completed};
-
-    \coordinate (leftFailBypass) at (-8.0,1.6);
-    \coordinate (rightFailBypass) at (8.0,1.6);
-
-    \draw[arr] (start) -- (choice);
-    \draw[arr] (choice) -- node[above left,font=\scriptsize,fill=white,inner sep=1pt]{yes} (register1);
-    \draw[arr] (choice) -- node[above right,font=\scriptsize,fill=white,inner sep=1pt]{no} (login1);
-
-    \draw[arr] (register1) -- (duplicate);
-    \draw[arr] (duplicate) -- node[right,font=\scriptsize,fill=white,inner sep=1pt]{no} (register2);
-    \draw[arr] (duplicate.west) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{yes} (leftFailBypass) |- (error.west);
-
-    \draw[arr] (login1) -- (validlogin);
-    \draw[arr] (validlogin) -- node[left,font=\scriptsize,fill=white,inner sep=1pt]{yes} (login2);
-    \draw[arr] (validlogin.east) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{no} (rightFailBypass) |- (error.east);
-
-    \draw[arr] (register2) |- (end.west);
-    \draw[arr] (login2) |- (end.east);
-    \draw[arr] (error) -- (end);
-\end{tikzpicture}%
-}
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/uc1-auth-flow.pdf}
 \caption{UC1 activity flow: authentication and profile entry}
 \label{fig:uc1-auth-flow}
 \end{figure}

@@ -1,0 +1,57 @@
+@startuml
+title UC4 activity flow: task CRUD and board status transitions
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam activity {
+  BorderColor #4B5563
+  BackgroundColor #F8FAFC
+  DiamondBackgroundColor #FEF9C3
+}
+
+start
+:Receive task operation request;
+:Check requester is project member;
+if (Project member?) then (yes)
+else (no)
+  :Return authorization error;
+  stop
+endif
+
+switch (Operation type)
+case (Create)
+  :Validate title, assignee, status, and due date;
+  :Apply optional attachment validation and upload;
+  :Insert task record;
+case (Read detail)
+  :Load task detail with assignee and attachment metadata;
+case (Update)
+  if (Owner or assigned member?) then (yes)
+    :Validate editable fields;
+    :Persist task updates;
+  else (no)
+    :Return permission error;
+    stop
+  endif
+case (Delete)
+  if (Requester is owner?) then (yes)
+    :Delete attachment file if present;
+    :Delete task record;
+  else (no)
+    :Return permission error;
+    stop
+  endif
+case (Move status)
+  if (Owner or assigned member?) then (yes)
+    :Update column_status\n(todo/in_progress/done);
+  else (no)
+    :Return permission error;
+    stop
+  endif
+endswitch
+
+:Return refreshed board payload;
+stop
+
+@enduml

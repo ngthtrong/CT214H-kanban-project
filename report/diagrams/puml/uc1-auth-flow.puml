@@ -1,0 +1,43 @@
+@startuml
+title UC1 activity flow: authentication and profile entry
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam activity {
+  BorderColor #4B5563
+  BackgroundColor #F8FAFC
+  DiamondBackgroundColor #FEF9C3
+}
+
+start
+:Open login or register page;
+
+if (Register new account?) then (yes)
+  :Validate registration fields;
+  if (Username or email exists?) then (yes)
+    :Return validation error to UI;
+    stop
+  else (no)
+    :Hash password with bcrypt;
+    :Insert new user record;
+    :Show registration success;
+    :Redirect user to login form;
+  endif
+endif
+
+:Validate login identifier and password;
+if (Credentials valid?) then (yes)
+  :Create secure session;
+  :Redirect to dashboard;
+  :Open profile page;
+  :Update profile fields\n(name, email, avatar, password);
+  :Persist profile changes;
+  :Show success message;
+  stop
+else (no)
+  :Return authentication error to UI;
+  stop
+endif
+
+@enduml

@@ -18,6 +18,7 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{float}
+\usepackage{pdflscape}
 \usepackage{caption}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
@@ -30,7 +31,7 @@
 \setlist[itemize]{leftmargin=1.6em}
 \setlist[enumerate]{leftmargin=1.8em}
 \setlength{\emergencystretch}{2em}
-\setlength{\headheight}{16pt}
+\setlength{\headheight}{30pt}
 \setlength{\hfuzz}{500pt}
 \hbadness=10000
 \sloppy
@@ -55,6 +56,13 @@
 \fancyhead[L]{Team Kanban - CT214H}
 \fancyhead[R]{\leftmark}
 \fancyfoot[C]{\thepage}
+
+\fancypagestyle{landscapefancy}{
+  \fancyhf{}
+  \fancyhead[L]{\smash{\rotatebox{0}{Team Kanban - CT214H}}}
+  \fancyhead[R]{\smash{\rotatebox{0}{\leftmark}}}
+  \fancyfoot[C]{\smash{\rotatebox{0}{\thepage}}}
+}
 
 \titleformat{\chapter}[display]
   {\bfseries\Large}
