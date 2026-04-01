@@ -1,0 +1,24 @@
+\section{Runtime Behavior and Responsive UI}
+
+\subsection{Routing and Runtime}
+
+At runtime, \code{index.php} redirects users based on login state:
+\begin{itemize}
+    \item Authenticated users are redirected to \code{public/dashboard.php}.
+    \item Guests are redirected to \code{public/login.php}.
+\end{itemize}
+
+From the dashboard, all major interactions are asynchronous and API-driven.
+This design keeps page navigation lightweight while preserving server-side security checks.
+
+\subsection{Responsive Interface}
+
+The UI style system is shared across pages:
+\begin{itemize}
+    \item \code{css/style.css}: base theme and components.
+    \item \code{css/kanban.css}: board-specific visual behavior.
+    \item \code{css/responsive.css}: mobile and tablet adaptation.
+\end{itemize}
+
+\screenshotplaceholder{Dashboard layout in desktop view}{dashboard-page.png}
+\screenshotplaceholder{Kanban board in mobile view}{kanban-mobile-view.png}

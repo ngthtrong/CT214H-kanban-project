@@ -1,0 +1,22 @@
+\section{Feature Overview by Use Case}
+
+The implementation is organized around six use cases (UC1--UC6) documented in project briefs and reflected in the codebase.
+
+\input{diagrams/usecase-overview}
+
+\begin{table}[H]
+\centering
+\caption{Use Cases and Main Implementation Areas}
+\begin{tabular}{p{0.14\textwidth} p{0.36\textwidth} p{0.40\textwidth}}
+\toprule
+\textbf{Use Case} & \textbf{Purpose} & \textbf{Main Files} \\
+\midrule
+UC1 & Registration, login, profile management & \code{public/login.php}, \code{public/register.php}, \code{public/profile.php}, \code{includes/auth.php}, \code{api/auth.php} \\
+UC2 & Project lifecycle management & \code{api/projects.php}, \code{src/Project/ProjectService.php}, \code{src/Project/ProjectRepository.php} \\
+UC3 & Membership and join request flow & \code{api/members.php}, \code{api/join-requests.php}, \code{src/Member/MemberService.php} \\
+UC4 & Task CRUD and Kanban operations & \code{api/tasks.php}, \code{src/Task/TaskService.php}, \code{public/project.php}, \code{js/kanban.js} \\
+UC5 & Assignment and claim workflow & \code{src/Task/TaskService.php} (assign/claim) + owner/member permission checks \\
+UC6 & Search, filter, and pagination & \code{src/Search/SearchService.php}, \code{api/tasks.php} (query routing) \\
+\bottomrule
+\end{tabular}
+\end{table}

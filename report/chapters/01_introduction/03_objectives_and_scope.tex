@@ -1,0 +1,39 @@
+\section{Objectives and Scope}
+
+\subsection{Primary Objectives}
+
+The project objectives extracted from the briefs and implementation are:
+\begin{itemize}
+    \item Deliver secure user registration, login, logout, and profile management.
+    \item Provide project workspace creation with role-aware collaboration.
+    \item Implement full task lifecycle management in a three-column Kanban board.
+    \item Support task search/filter and paginated retrieval for scalability.
+    \item Enforce safe file upload for avatars and task attachments.
+\end{itemize}
+
+\subsection{In-Scope Functional Areas}
+
+\begin{table}[H]
+\centering
+\caption{In-Scope Modules}
+\begin{tabular}{p{0.23\textwidth} p{0.70\textwidth}}
+\toprule
+\textbf{Module} & \textbf{Delivered Scope} \\
+\midrule
+User Authentication and UI & Registration, login/logout, profile update, avatar upload, responsive pages. \\
+Project and Members & Project CRUD, owner role, project code sharing, join requests, member removal workflow. \\
+Task Management & Task CRUD, drag-and-drop status update, assignment/claim logic, attachment upload and download. \\
+Search, Filter, and Database & Multi-criteria filtering, text search, pagination, normalized relational schema with constraints. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Out-of-Scope Items}
+
+The current version intentionally excludes advanced capabilities:
+\begin{itemize}
+    \item Social login and password reset by email/OTP.
+    \item Real-time board synchronization via WebSocket.
+    \item Advanced role hierarchy beyond owner and member.
+    \item Full-text search engine integration (for example ElasticSearch).
+\end{itemize}

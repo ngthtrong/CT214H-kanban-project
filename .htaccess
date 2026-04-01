@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /CT214H-kanban-project/
+
+# Legacy public routes are mapped internally to the new root pages.
+RewriteRule ^public/dashboard\.php$ index.php [L,NC]
+RewriteRule ^public/(login|register|logout|profile|project)\.php$ $1.php [L,NC]
+
+# Backward-compatible dashboard entry mapped to index.
+RewriteRule ^dashboard(?:\.php)?$ index.php [L,NC]
+
+# Extensionless page routing when a corresponding .php file exists.
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([a-z0-9-]+)/?$ $1.php [L,NC]
+</IfModule>
+
+DirectoryIndex index.php

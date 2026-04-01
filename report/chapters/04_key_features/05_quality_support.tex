@@ -1,0 +1,18 @@
+\section{Quality Support and Verification Practices}
+
+Although the project focus is functional delivery, the repository also includes basic quality tooling:
+\begin{itemize}
+    \item Unit and integration testing setup through PHPUnit configuration.
+    \item Style checks with PHPCS and auto-fix support with PHPCBF.
+    \item Static quality checks with PHPMD.
+\end{itemize}
+
+Composer scripts provide a repeatable quality workflow:
+\begin{itemize}
+    \item \code{composer test}
+    \item \code{composer lint}
+    \item \code{composer mess}
+    \item \code{composer quality}
+\end{itemize}
+
+This toolchain enables incremental improvements and helps prevent regressions while features evolve.

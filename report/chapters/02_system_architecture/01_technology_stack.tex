@@ -1,0 +1,19 @@
+\section{Technology Stack}
+
+The system uses a classic web stack aligned with CT214H project constraints.
+
+\begin{table}[H]
+\centering
+\caption{Technology Stack Summary}
+\begin{tabular}{p{0.24\textwidth} p{0.68\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{Technology and Role} \\
+\midrule
+Frontend & HTML5 templates in \code{public/}, CSS in \code{css/}, JavaScript modules in \code{js/}. \\
+Backend API & PHP endpoints in \code{api/} handling authentication, project, member, task, and upload operations. \\
+Application Logic & Service classes in \code{src/} encapsulating business rules and permission checks. \\
+Data Access & PDO helper functions in \code{includes/db-connect.php}; relational schema in MySQL 8.x. \\
+Quality Tooling & Composer scripts for PHPUnit, PHPCS, and PHPMD quality checks. \\
+\bottomrule
+\end{tabular}
+\end{table}

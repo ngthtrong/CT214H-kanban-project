@@ -1,0 +1,27 @@
+node_modules/
+*.env
+*.env.local
+.DS_Store
+dist/
+build/
+*.log
+
+# PHPUnit & Test Coverage
+vendor/
+coverage/
+.coverage
+.php-cs-fixer.cache
+.phpmd-cache
+.phpunit.result.cache
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary & Cache
+tmp/
+temp/
+.tmp
