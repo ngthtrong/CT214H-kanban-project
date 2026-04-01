@@ -15,13 +15,9 @@
  * DELETE /api/tasks.php?id={id}                      - Delete task
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Task\TaskService;
-use App\Search\SearchService;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -31,21 +27,20 @@ if (!isLoggedIn()) {
 
 $userId = getCurrentUserId();
 $method = $_SERVER['REQUEST_METHOD'];
-$service = new TaskService();
 
 try {
     switch ($method) {
         case 'GET':
-            handleGet($service, $userId);
+            handleGet($userId);
             break;
         case 'POST':
-            handlePost($service, $userId);
+            handlePost($userId);
             break;
         case 'PUT':
-            handlePut($service, $userId);
+            handlePut($userId);
             break;
         case 'DELETE':
-            handleDelete($service, $userId);
+            handleDelete($userId);
             break;
         default:
             jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -55,12 +50,12 @@ try {
     jsonResponse(['success' => false, 'error' => 'Có lỗi xảy ra'], 500);
 }
 
-function handleGet(TaskService $service, int $userId): void
+function handleGet(int $userId): void
 {
     // Get single task
     if (isset($_GET['id'])) {
         $taskId = (int) $_GET['id'];
-        $result = $service->getTask($taskId, $userId);
+        $result = taskGet($taskId, $userId);
         jsonResponse($result, $result['success'] ? 200 : 404);
     }
 
@@ -70,8 +65,7 @@ function handleGet(TaskService $service, int $userId): void
         
         // Get filter options
         if (isset($_GET['filters'])) {
-            $searchService = new SearchService();
-            $result = $searchService->getFilterOptions($projectId, $userId);
+            $result = searchGetFilterOptions($projectId, $userId);
             jsonResponse($result, $result['success'] ? 200 : 403);
         }
         
@@ -82,7 +76,6 @@ function handleGet(TaskService $service, int $userId): void
                           isset($_GET['page']);
         
         if ($hasSearchParams) {
-            $searchService = new SearchService();
             $filters = [
                 'search' => $_GET['search'] ?? '',
                 'status' => $_GET['status'] ?? '',
@@ -95,19 +88,19 @@ function handleGet(TaskService $service, int $userId): void
                 'page' => $_GET['page'] ?? 1,
                 'per_page' => $_GET['per_page'] ?? ITEMS_PER_PAGE
             ];
-            $result = $searchService->searchTasks($projectId, $userId, $filters);
+            $result = searchProjectTasks($projectId, $userId, $filters);
             jsonResponse($result, $result['success'] ? 200 : 403);
         }
         
         // Default: get all tasks
-        $result = $service->getProjectTasks($projectId, $userId);
+        $result = taskGetProjectTasks($projectId, $userId);
         jsonResponse($result, $result['success'] ? 200 : 403);
     }
 
     jsonResponse(['success' => false, 'error' => 'Missing parameters'], 400);
 }
 
-function handlePost(TaskService $service, int $userId): void
+function handlePost(int $userId): void
 {
     $input = getJsonInput();
     
@@ -116,11 +109,11 @@ function handlePost(TaskService $service, int $userId): void
         jsonResponse(['success' => false, 'error' => 'Missing project_id'], 400);
     }
 
-    $result = $service->createTask($projectId, $userId, $input);
+    $result = taskCreate($projectId, $userId, $input);
     jsonResponse($result, $result['success'] ? 201 : 400);
 }
 
-function handlePut(TaskService $service, int $userId): void
+function handlePut(int $userId): void
 {
     $taskId = (int) ($_GET['id'] ?? 0);
     if (!$taskId) {
@@ -134,30 +127,30 @@ function handlePut(TaskService $service, int $userId): void
         case 'status':
             // Update status only (for drag & drop)
             $newStatus = $input['column_status'] ?? '';
-            $result = $service->updateTaskStatus($taskId, $userId, $newStatus);
+            $result = taskUpdateStatus($taskId, $userId, $newStatus);
             break;
         
         case 'claim':
             // Claim task for self
-            $result = $service->claimTask($taskId, $userId);
+            $result = taskClaim($taskId, $userId);
             break;
         
         default:
             // Full update
-            $result = $service->updateTask($taskId, $userId, $input);
+            $result = taskUpdate($taskId, $userId, $input);
     }
 
     jsonResponse($result, $result['success'] ? 200 : 400);
 }
 
-function handleDelete(TaskService $service, int $userId): void
+function handleDelete(int $userId): void
 {
     $taskId = (int) ($_GET['id'] ?? 0);
     if (!$taskId) {
         jsonResponse(['success' => false, 'error' => 'Missing task ID'], 400);
     }
 
-    $result = $service->deleteTask($taskId, $userId);
+    $result = taskDelete($taskId, $userId);
     jsonResponse($result, $result['success'] ? 200 : 400);
 }
 

@@ -9,13 +9,9 @@
  * GET    /api/upload.php?file={filename} - Download attachment
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Task\TaskService;
-use App\Task\FileUploadService;
 
 // Auth check
 if (!isLoggedIn()) {
@@ -62,8 +58,7 @@ function handleDownload(): void
     // Sanitize filename to prevent directory traversal
     $filename = basename($filename);
     
-    $uploadService = new FileUploadService();
-    $fileInfo = $uploadService->getFileInfo($filename);
+    $fileInfo = getAttachmentFileInfo($filename);
     
     if (!$fileInfo) {
         header('Content-Type: application/json');
@@ -94,11 +89,8 @@ function handleUpload(int $userId): void
         jsonResponse(['success' => false, 'error' => 'Không có file được tải lên'], 400);
     }
 
-    $taskService = new TaskService();
-    $uploadService = new FileUploadService();
-
     // Check user can upload to this task
-    $taskResult = $taskService->getTask($taskId, $userId);
+    $taskResult = taskGet($taskId, $userId);
     if (!$taskResult['success']) {
         jsonResponse($taskResult, 403);
     }
@@ -112,16 +104,16 @@ function handleUpload(int $userId): void
     }
 
     // Upload file
-    $uploadResult = $uploadService->uploadAttachment($_FILES['attachment']);
+    $uploadResult = uploadAttachmentFile($_FILES['attachment']);
     if (!$uploadResult['success']) {
         jsonResponse($uploadResult, 400);
     }
 
     // Update task with attachment path
-    $updateResult = $taskService->updateAttachment($taskId, $userId, $uploadResult['data']['filename']);
+    $updateResult = taskUpdateAttachment($taskId, $userId, $uploadResult['data']['filename']);
     if (!$updateResult['success']) {
         // Rollback: delete uploaded file
-        $uploadService->deleteAttachment($uploadResult['data']['filename']);
+        deleteAttachmentFileByName($uploadResult['data']['filename']);
         jsonResponse($updateResult, 500);
     }
 
@@ -145,11 +137,8 @@ function handleDelete(int $userId): void
         jsonResponse(['success' => false, 'error' => 'Missing task_id'], 400);
     }
 
-    $taskService = new TaskService();
-    $uploadService = new FileUploadService();
-
     // Check user can modify this task
-    $taskResult = $taskService->getTask($taskId, $userId);
+    $taskResult = taskGet($taskId, $userId);
     if (!$taskResult['success']) {
         jsonResponse($taskResult, 403);
     }
@@ -164,11 +153,11 @@ function handleDelete(int $userId): void
 
     // Delete file from filesystem
     if ($task['attachment_path']) {
-        $uploadService->deleteAttachment($task['attachment_path']);
+        deleteAttachmentFileByName($task['attachment_path']);
     }
 
     // Update task to remove attachment reference
-    $updateResult = $taskService->updateAttachment($taskId, $userId, null);
+    $updateResult = taskUpdateAttachment($taskId, $userId, null);
     
     jsonResponse([
         'success' => true,

@@ -35,14 +35,15 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= assetVersioned('css/style.css') ?>">
     
     <?php if (isset($additionalCss)): ?>
         <?php foreach ($additionalCss as $css): ?>
-        <link rel="stylesheet" href="<?= asset($css) ?>">
+        <link rel="stylesheet" href="<?= assetVersioned($css) ?>">
         <?php endforeach; ?>
     <?php endif; ?>
+
+    <link rel="stylesheet" href="<?= assetVersioned('css/responsive.css') ?>">
 </head>
 <body>
     <!-- Header -->

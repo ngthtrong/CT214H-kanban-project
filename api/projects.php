@@ -12,12 +12,9 @@
  * DELETE /api/projects.php?id={id}         - Delete project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Project\ProjectService;
 
 // Set JSON response header
 header('Content-Type: application/json; charset=utf-8');
@@ -29,21 +26,20 @@ if (!isLoggedIn()) {
 
 $userId = getCurrentUserId();
 $method = $_SERVER['REQUEST_METHOD'];
-$service = new ProjectService();
 
 try {
     switch ($method) {
         case 'GET':
-            handleGet($service, $userId);
+            handleGet($userId);
             break;
         case 'POST':
-            handlePost($service, $userId);
+            handlePost($userId);
             break;
         case 'PUT':
-            handlePut($service, $userId);
+            handlePut($userId);
             break;
         case 'DELETE':
-            handleDelete($service, $userId);
+            handleDelete($userId);
             break;
         default:
             jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -56,31 +52,31 @@ try {
 /**
  * Handle GET requests
  */
-function handleGet(ProjectService $service, int $userId): void
+function handleGet(int $userId): void
 {
     // Get single project by ID
     if (isset($_GET['id'])) {
         $projectId = (int) $_GET['id'];
-        $result = $service->getProject($projectId, $userId);
+        $result = projectGet($projectId, $userId);
         jsonResponse($result, $result['success'] ? 200 : 404);
     }
 
     // Find project by code
     if (isset($_GET['code'])) {
         $code = sanitize($_GET['code']);
-        $result = $service->findProjectByCode($code);
+        $result = projectFindByCode($code);
         jsonResponse($result, $result['success'] ? 200 : 404);
     }
 
     // List all user's projects
-    $result = $service->getUserProjects($userId);
+    $result = projectGetUserProjects($userId);
     jsonResponse($result);
 }
 
 /**
  * Handle POST requests - Create project
  */
-function handlePost(ProjectService $service, int $userId): void
+function handlePost(int $userId): void
 {
     // CSRF check for non-AJAX requests
     $input = getJsonInput();
@@ -92,14 +88,14 @@ function handlePost(ProjectService $service, int $userId): void
         jsonResponse(['success' => false, 'error' => 'Tên dự án là bắt buộc'], 400);
     }
 
-    $result = $service->createProject($userId, $name, $description);
+    $result = projectCreate($userId, $name, $description);
     jsonResponse($result, $result['success'] ? 201 : 400);
 }
 
 /**
  * Handle PUT requests - Update project
  */
-function handlePut(ProjectService $service, int $userId): void
+function handlePut(int $userId): void
 {
     if (!isset($_GET['id'])) {
         jsonResponse(['success' => false, 'error' => 'Missing project ID'], 400);
@@ -116,21 +112,21 @@ function handlePut(ProjectService $service, int $userId): void
         $data['description'] = $input['description'];
     }
 
-    $result = $service->updateProject($projectId, $userId, $data);
+    $result = projectUpdate($projectId, $userId, $data);
     jsonResponse($result, $result['success'] ? 200 : 400);
 }
 
 /**
  * Handle DELETE requests - Delete project
  */
-function handleDelete(ProjectService $service, int $userId): void
+function handleDelete(int $userId): void
 {
     if (!isset($_GET['id'])) {
         jsonResponse(['success' => false, 'error' => 'Missing project ID'], 400);
     }
 
     $projectId = (int) $_GET['id'];
-    $result = $service->deleteProject($projectId, $userId);
+    $result = projectDelete($projectId, $userId);
     jsonResponse($result, $result['success'] ? 200 : 400);
 }
 

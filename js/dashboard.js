@@ -19,7 +19,7 @@ async function loadProjects() {
     const container = document.getElementById('projectsContainer');
     
     try {
-        const response = await fetch('/CT214H-kanban-project/api/projects.php');
+        const response = await fetch('api/projects.php');
         const result = await response.json();
         
         if (!result.success) {
@@ -31,7 +31,7 @@ async function loadProjects() {
         if (projects.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-icon empty-state-icon-text">Dự án</div>
                     <h3>Chưa có dự án nào</h3>
                     <p>Tạo dự án mới hoặc tham gia dự án có sẵn để bắt đầu</p>
                 </div>
@@ -81,7 +81,7 @@ function renderProjectCard(project) {
                 </div>
                 <button class="btn-copy" onclick="copyProjectCode('${project.project_code}'); event.stopPropagation();" 
                         title="Sao chép mã dự án">
-                    <span>📋</span>
+                    <span>Copy</span>
                 </button>
             </div>
             
@@ -91,12 +91,12 @@ function renderProjectCard(project) {
             
             <div class="project-card-stats">
                 <div class="project-stat">
-                    <span class="project-stat-icon">👥</span>
-                    <span>${project.member_count || 0} thành viên</span>
+                    <span class="project-stat-label">Thành viên:</span>
+                    <span>${project.member_count || 0}</span>
                 </div>
                 <div class="project-stat">
-                    <span class="project-stat-icon">📝</span>
-                    <span>${project.task_count || 0} công việc</span>
+                    <span class="project-stat-label">Công việc:</span>
+                    <span>${project.task_count || 0}</span>
                 </div>
             </div>
             
@@ -113,6 +113,9 @@ function renderProjectCard(project) {
  */
 function initCreateProjectForm() {
     const form = document.getElementById('createProjectForm');
+    if (!form) {
+        return;
+    }
     
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -128,7 +131,7 @@ function initCreateProjectForm() {
         };
         
         try {
-            const response = await fetch('/CT214H-kanban-project/api/projects.php', {
+            const response = await fetch('api/projects.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -169,6 +172,10 @@ function initJoinProjectForm() {
     const joinBtn = document.getElementById('joinProjectBtn');
     const codeInput = document.getElementById('project_code');
     const preview = document.getElementById('projectPreview');
+
+    if (!form || !findBtn || !joinBtn || !codeInput || !preview) {
+        return;
+    }
     
     let foundProjectId = null;
     
@@ -185,7 +192,7 @@ function initJoinProjectForm() {
         findBtn.textContent = 'Đang tìm...';
         
         try {
-            const response = await fetch(`/CT214H-kanban-project/api/projects.php?code=${code}`);
+            const response = await fetch(`api/projects.php?code=${code}`);
             const result = await response.json();
             
             if (!result.success) {
@@ -227,7 +234,7 @@ function initJoinProjectForm() {
         joinBtn.innerHTML = '<span class="spinner"></span> Đang gửi...';
         
         try {
-            const response = await fetch('/CT214H-kanban-project/api/join-requests.php', {
+            const response = await fetch('api/join-requests.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

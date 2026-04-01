@@ -23,11 +23,11 @@
     </footer>
     
     <!-- Scripts -->
-    <script src="<?= asset('js/main.js') ?>"></script>
+    <script src="<?= assetVersioned('js/main.js') ?>"></script>
     
     <?php if (isset($additionalJs)): ?>
         <?php foreach ($additionalJs as $js): ?>
-        <script src="<?= asset($js) ?>"></script>
+        <script src="<?= assetVersioned($js) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
     

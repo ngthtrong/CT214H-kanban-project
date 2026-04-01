@@ -119,7 +119,7 @@ function validateField(field) {
     
     // Password match (for confirm password fields)
     if (isValid && rules.match) {
-        const matchField = document.querySelector(rules.match);
+        const matchField = document.getElementById(rules.match) || document.querySelector(rules.match);
         if (matchField && value !== matchField.value) {
             isValid = false;
             errorMessage = 'Mật khẩu không khớp';
@@ -325,7 +325,12 @@ function openModal(modalId) {
 }
 
 function closeModal(modal) {
-    modal.classList.remove('active');
+    const modalElement = typeof modal === 'string' ? document.getElementById(modal) : modal;
+    if (!modalElement) {
+        return;
+    }
+
+    modalElement.classList.remove('active');
     document.body.style.overflow = '';
 }
 

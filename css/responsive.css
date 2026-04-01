@@ -84,6 +84,61 @@
     .cards-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .page-header {
+        align-items: flex-start;
+    }
+
+    .page-header > div[style*="display: flex"] {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm) !important;
+        justify-content: flex-start !important;
+        width: 100%;
+    }
+
+    .profile-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .form-row .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-row .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    #addMemberForm {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: stretch !important;
+    }
+
+    #addMemberForm .form-group {
+        flex: 1 1 100% !important;
+        margin-bottom: var(--spacing-sm) !important;
+    }
+
+    #membersContainer,
+    #requestsContainer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #membersContainer .table,
+    #requestsContainer .table {
+        min-width: 680px;
+    }
 }
 
 /* Small Screens - Mobile Landscape (576px - 767px) */
@@ -145,6 +200,60 @@
         flex-direction: column;
         text-align: center;
     }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header > div[style*="display: flex"] .btn,
+    .page-header > a.btn {
+        width: 100%;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-header > div:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: var(--spacing-sm);
+    }
+
+    .dashboard-header > div:last-child .btn {
+        flex: 1 1 100%;
+    }
+
+    .form-actions,
+    .btn-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-actions .btn,
+    .btn-group .btn {
+        width: 100%;
+    }
+
+    .profile-nav {
+        gap: var(--spacing-sm);
+    }
+
+    .profile-nav-item {
+        min-height: 42px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        transform: none;
+    }
+
+    .auth-form .form-group > input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    .profile-form .form-group > input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    .profile-form .form-group > select,
+    .profile-form .form-group > textarea {
+        min-height: 44px;
+    }
     
     /* Modal */
     .modal {
@@ -156,6 +265,15 @@
     .modal-body,
     .modal-footer {
         padding: var(--spacing-md);
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
     }
     
     /* Dropdown on mobile */
@@ -182,6 +300,26 @@
     /* Show elements only on mobile */
     .show-mobile {
         display: block !important;
+    }
+
+    #searchForm > div[style*="display: flex"],
+    #joinProjectPageForm > div[style*="display: flex"],
+    .card-body > div[style*="display: flex"][style*="margin-top: 1rem"],
+    #searchResults div[style*="display: flex"][style*="margin-top: .75rem"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+    }
+
+    #searchForm > div[style*="display: flex"] .btn,
+    #joinProjectPageForm > div[style*="display: flex"] .btn,
+    .card-body > div[style*="display: flex"][style*="margin-top: 1rem"] .btn,
+    #searchResults div[style*="display: flex"][style*="margin-top: .75rem"] .btn {
+        width: 100%;
+    }
+
+    .project-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -232,6 +370,11 @@
     .alert {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: 0.875rem;
+    }
+
+    #membersContainer .table,
+    #requestsContainer .table {
+        min-width: 560px;
     }
 }
 
@@ -396,7 +539,8 @@
     
     .project-header-right .btn {
         flex: 1;
-        min-width: 150px;
+        min-width: 0;
+        width: 100%;
         justify-content: center;
     }
     

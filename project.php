@@ -4,12 +4,9 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/session.php';
-
-use App\Project\ProjectService;
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/session.php';
 
 // Require authentication
 if (!isLoggedIn()) {
@@ -23,35 +20,33 @@ $user = getCurrentUser();
 $projectId = (int) ($_GET['id'] ?? 0);
 if (!$projectId) {
     flash('Project không tồn tại', 'error');
-    redirect('dashboard.php');
+    redirect('index.php');
 }
 
 // Load project info and check access
-$projectService = new ProjectService();
-$projectResult = $projectService->getProject($projectId, $userId);
+$projectResult = projectGet($projectId, $userId);
 
 if (!$projectResult['success']) {
     flash($projectResult['error'], 'error');
-    redirect('dashboard.php');
+    redirect('index.php');
 }
 
 $project = $projectResult['data'];
 $isOwner = $project['user_role'] === 'owner';
 
 $pageTitle = htmlspecialchars($project['project_name']) . ' - ' . APP_NAME;
+$additionalCss = ['css/kanban.css'];
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/includes/header.php';
 ?>
-
-<link rel="stylesheet" href="../css/kanban.css">
 
 <div class="main-content">
     <div class="container-fluid">
         <!-- Project Header -->
         <div class="project-header">
             <div class="project-header-left">
-                <a href="dashboard.php" class="btn-back" title="Quay lại Dashboard">
-                    <span>←</span> Dashboard
+                <a href="index.php" class="btn-back" title="Quay lại Dashboard">
+                    Dashboard
                 </a>
                 <div class="project-info">
                     <h1 class="project-title"><?= htmlspecialchars($project['project_name']) ?></h1>
@@ -60,13 +55,13 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                     <div class="project-meta">
                         <span class="project-code-badge">
-                            📋 Mã: <strong id="projectCodeDisplay"><?= htmlspecialchars($project['project_code']) ?></strong>
-                            <button class="btn-copy-inline" onclick="copyProjectCode('<?= htmlspecialchars($project['project_code']) ?>')" title="Sao chép mã">
-                                📋
+                            Mã dự án: <strong id="projectCodeDisplay"><?= htmlspecialchars($project['project_code']) ?></strong>
+                            <button type="button" class="btn-copy-inline" data-copy-project-code="<?= htmlspecialchars($project['project_code']) ?>" title="Sao chép mã">
+                                Copy
                             </button>
                         </span>
                         <span class="project-role-badge <?= $isOwner ? 'owner' : 'member' ?>">
-                            <?= $isOwner ? '👑 Chủ dự án' : '👤 Thành viên' ?>
+                            <?= $isOwner ? 'Chủ dự án' : 'Thành viên' ?>
                         </span>
                     </div>
                 </div>
@@ -74,18 +69,18 @@ require_once __DIR__ . '/../includes/header.php';
             
             <div class="project-header-right">
                 <button class="btn btn-outline" data-modal-open="searchFilterModal">
-                    <span>🔍</span> Tìm kiếm & Lọc
+                    Tìm kiếm & Lọc
                 </button>
                 <?php if ($isOwner): ?>
-                    <button class="btn btn-outline" data-modal-open="manageMembersModal">
-                        <span>👥</span> Quản lý thành viên
-                    </button>
-                    <button class="btn btn-outline" data-modal-open="projectSettingsModal">
-                        <span>⚙️</span> Cài đặt
-                    </button>
+                    <a class="btn btn-outline" href="members.php?project_id=<?= $projectId ?>">
+                        Quản lý thành viên
+                    </a>
+                    <a class="btn btn-outline" href="join-requests.php?project_id=<?= $projectId ?>">
+                        Yêu cầu tham gia
+                    </a>
                 <?php endif; ?>
                 <button class="btn btn-primary" data-modal-open="createTaskModal">
-                    <span>➕</span> Tạo task mới
+                    Tạo task mới
                 </button>
             </div>
         </div>
@@ -103,10 +98,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- To Do Column -->
                 <div class="kanban-column" data-status="todo">
                     <div class="kanban-column-header">
-                        <h3 class="kanban-column-title">
-                            <span class="column-icon">📝</span>
-                            To Do
-                        </h3>
+                        <h3 class="kanban-column-title">To Do</h3>
                         <span class="kanban-column-count" id="count-todo">0</span>
                     </div>
                     <div class="kanban-column-body" id="column-todo">
@@ -117,10 +109,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- In Progress Column -->
                 <div class="kanban-column" data-status="in_progress">
                     <div class="kanban-column-header">
-                        <h3 class="kanban-column-title">
-                            <span class="column-icon">⚡</span>
-                            In Progress
-                        </h3>
+                        <h3 class="kanban-column-title">In Progress</h3>
                         <span class="kanban-column-count" id="count-in_progress">0</span>
                     </div>
                     <div class="kanban-column-body" id="column-in_progress">
@@ -131,10 +120,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- Done Column -->
                 <div class="kanban-column" data-status="done">
                     <div class="kanban-column-header">
-                        <h3 class="kanban-column-title">
-                            <span class="column-icon">✅</span>
-                            Done
-                        </h3>
+                        <h3 class="kanban-column-title">Done</h3>
                         <span class="kanban-column-count" id="count-done">0</span>
                     </div>
                     <div class="kanban-column-body" id="column-done">
@@ -173,18 +159,18 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="form-group">
                         <label for="priority">Độ ưu tiên</label>
                         <select id="priority" name="priority" class="form-control">
-                            <option value="low">🟢 Thấp</option>
-                            <option value="medium" selected>🟡 Trung bình</option>
-                            <option value="high">🔴 Cao</option>
+                            <option value="low">Thấp</option>
+                            <option value="medium" selected>Trung bình</option>
+                            <option value="high">Cao</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="column_status">Trạng thái</label>
                         <select id="column_status" name="column_status" class="form-control">
-                            <option value="todo" selected>📝 To Do</option>
-                            <option value="in_progress">⚡ In Progress</option>
-                            <option value="done">✅ Done</option>
+                            <option value="todo" selected>To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="done">Done</option>
                         </select>
                     </div>
                 </div>
@@ -257,18 +243,18 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="form-group">
                         <label for="edit_priority">Độ ưu tiên</label>
                         <select id="edit_priority" name="priority" class="form-control">
-                            <option value="low">🟢 Thấp</option>
-                            <option value="medium">🟡 Trung bình</option>
-                            <option value="high">🔴 Cao</option>
+                            <option value="low">Thấp</option>
+                            <option value="medium">Trung bình</option>
+                            <option value="high">Cao</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="edit_column_status">Trạng thái</label>
                         <select id="edit_column_status" name="column_status" class="form-control">
-                            <option value="todo">📝 To Do</option>
-                            <option value="in_progress">⚡ In Progress</option>
-                            <option value="done">✅ Done</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="done">Done</option>
                         </select>
                     </div>
                 </div>
@@ -295,7 +281,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <input type="file" id="edit_attachment_upload" style="display: none;" 
                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
                     <button type="button" class="btn btn-outline btn-sm" id="uploadAttachmentBtn">
-                        📎 Upload file
+                        Upload file
                     </button>
                     <small class="form-hint">Chấp nhận: JPG, PNG, PDF, DOC, DOCX (tối đa 5MB)</small>
                 </div>
@@ -367,7 +353,6 @@ const IS_OWNER = <?= $isOwner ? 'true' : 'false' ?>;
 const CURRENT_USER_ID = <?= $userId ?>;
 </script>
 
-<script src="../js/main.js"></script>
-<script src="../js/kanban.js"></script>
+<script type="module" src="<?= asset('js/kanban.js') ?>"></script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

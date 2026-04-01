@@ -11,12 +11,9 @@
  * PUT    /api/join-requests.php?id={id}&action=reject   - Reject request
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/session.php';
-
-use App\Member\MemberService;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -26,18 +23,17 @@ if (!isLoggedIn()) {
 
 $userId = getCurrentUserId();
 $method = $_SERVER['REQUEST_METHOD'];
-$service = new MemberService();
 
 try {
     switch ($method) {
         case 'GET':
-            handleGet($service, $userId);
+            handleGet($userId);
             break;
         case 'POST':
-            handlePost($service, $userId);
+            handlePost($userId);
             break;
         case 'PUT':
-            handlePut($service, $userId);
+            handlePut($userId);
             break;
         default:
             jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -47,25 +43,25 @@ try {
     jsonResponse(['success' => false, 'error' => 'Có lỗi xảy ra'], 500);
 }
 
-function handleGet(MemberService $service, int $userId): void
+function handleGet(int $userId): void
 {
     // Get user's own pending requests
     if (isset($_GET['my'])) {
-        $result = $service->getUserPendingRequests($userId);
+        $result = memberGetUserPendingRequests($userId);
         jsonResponse($result);
     }
 
     // Get pending requests for a project (owner only)
     if (isset($_GET['project_id'])) {
         $projectId = (int) $_GET['project_id'];
-        $result = $service->getPendingRequests($projectId, $userId);
+        $result = memberGetPendingRequests($projectId, $userId);
         jsonResponse($result, $result['success'] ? 200 : 403);
     }
 
     jsonResponse(['success' => false, 'error' => 'Missing parameters'], 400);
 }
 
-function handlePost(MemberService $service, int $userId): void
+function handlePost(int $userId): void
 {
     $input = getJsonInput();
     $projectId = (int) ($input['project_id'] ?? 0);
@@ -74,11 +70,11 @@ function handlePost(MemberService $service, int $userId): void
         jsonResponse(['success' => false, 'error' => 'Missing project_id'], 400);
     }
 
-    $result = $service->requestJoin($projectId, $userId);
+    $result = memberRequestJoin($projectId, $userId);
     jsonResponse($result, $result['success'] ? 201 : 400);
 }
 
-function handlePut(MemberService $service, int $userId): void
+function handlePut(int $userId): void
 {
     $requestId = (int) ($_GET['id'] ?? 0);
     $action = $_GET['action'] ?? '';
@@ -89,10 +85,10 @@ function handlePut(MemberService $service, int $userId): void
 
     switch ($action) {
         case 'approve':
-            $result = $service->approveJoinRequest($requestId, $userId);
+            $result = memberApproveJoinRequest($requestId, $userId);
             break;
         case 'reject':
-            $result = $service->rejectJoinRequest($requestId, $userId);
+            $result = memberRejectJoinRequest($requestId, $userId);
             break;
         default:
             jsonResponse(['success' => false, 'error' => 'Invalid action. Use approve or reject'], 400);

@@ -85,6 +85,11 @@
     font-size: 1rem;
 }
 
+.project-stat-label {
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
 .project-role-badge {
     display: inline-flex;
     align-items: center;
@@ -115,6 +120,15 @@
     font-size: 4rem;
     margin-bottom: var(--spacing-md);
     opacity: 0.3;
+}
+
+.empty-state-icon-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    opacity: 1;
+    color: var(--primary-color);
 }
 
 .empty-state h3 {
@@ -507,6 +521,10 @@
     margin-bottom: var(--spacing-md);
 }
 
+.project-header .project-info {
+    display: block;
+}
+
 .project-title {
     font-size: 2rem;
     font-weight: 700;
@@ -543,6 +561,9 @@
     padding: 2px 6px;
     background: transparent;
     border: none;
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    font-weight: 700;
     cursor: pointer;
     border-radius: var(--radius-sm);
     transition: background var(--transition-fast);
@@ -554,6 +575,8 @@
 
 /* Kanban Board Layout */
 .kanban-board {
+    display: block;
+    width: 100%;
     min-height: 60vh;
 }
 
@@ -568,7 +591,9 @@
 
 .kanban-columns {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--spacing-lg);
     align-items: flex-start;
 }
@@ -577,9 +602,34 @@
     background: var(--gray-50);
     border-radius: var(--radius-lg);
     padding: var(--spacing-md);
+    min-width: 0;
     min-height: 500px;
     display: flex;
     flex-direction: column;
+}
+
+.kanban-column[data-status="todo"] {
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.kanban-column[data-status="in_progress"] {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.kanban-column[data-status="done"] {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.kanban-column[data-status="todo"] .kanban-column-header {
+    border-bottom-color: rgba(148, 163, 184, 0.55);
+}
+
+.kanban-column[data-status="in_progress"] .kanban-column-header {
+    border-bottom-color: rgba(245, 158, 11, 0.55);
+}
+
+.kanban-column[data-status="done"] .kanban-column-header {
+    border-bottom-color: rgba(34, 197, 94, 0.55);
 }
 
 .kanban-column-header {
@@ -798,4 +848,102 @@
 .container-fluid {
     max-width: 100%;
     padding: 0 var(--spacing-lg);
+}
+
+@media (max-width: 1199px) {
+    .kanban-columns {
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1299px) {
+    .kanban-columns {
+        gap: var(--spacing-md);
+    }
+
+    .kanban-column {
+        padding: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 991px) {
+    .kanban-board {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: var(--spacing-sm);
+    }
+
+    .kanban-columns {
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+        min-width: 840px;
+    }
+
+    .project-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .project-header-left {
+        min-width: 0;
+    }
+
+    .project-header-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 767px) {
+    .container-fluid {
+        padding: 0 var(--spacing-md);
+    }
+
+    .project-title {
+        font-size: 1.5rem;
+    }
+
+    .project-header-right {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .project-header-right .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .kanban-board {
+        overflow: visible;
+    }
+
+    .kanban-columns {
+        min-width: 0;
+        grid-template-columns: 1fr;
+    }
+
+    .kanban-column {
+        min-height: auto;
+    }
+
+    .kanban-column-body {
+        min-height: 180px;
+    }
+
+    .task-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .modal.modal-large {
+        max-width: 100%;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
 }

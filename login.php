@@ -4,14 +4,13 @@
  * Team Kanban - CT214H Final Project
  */
 
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/session.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/session.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('dashboard.php');
+    redirect('index.php');
 }
 
 $errors = [];
@@ -35,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             loginUser($result['user'], $remember);
             
             // Redirect to intended page or dashboard
-            $redirectTo = $_GET['redirect'] ?? 'dashboard.php';
+            $redirectTo = $_GET['redirect'] ?? 'index.php';
             redirect($redirectTo);
         } else {
             $errors[] = $result['error'];
@@ -51,8 +50,8 @@ $pageTitle = 'Đăng nhập - Kanban Board';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?></title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="<?= assetVersioned('css/style.css') ?>">
+    <link rel="stylesheet" href="<?= assetVersioned('css/responsive.css') ?>">
 </head>
 <body class="auth-page">
     <div class="auth-container">
@@ -119,6 +118,6 @@ $pageTitle = 'Đăng nhập - Kanban Board';
         </div>
     </div>
     
-    <script src="../js/main.js"></script>
+    <script src="<?= assetVersioned('js/main.js') ?>"></script>
 </body>
 </html>
