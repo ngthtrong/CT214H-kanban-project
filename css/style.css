@@ -783,6 +783,7 @@ select.form-control {
 /* Auth Pages */
 .auth-page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -790,13 +791,19 @@ select.form-control {
     background: linear-gradient(135deg, var(--primary-light) 0%, var(--gray-100) 100%);
 }
 
+.auth-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 .auth-card {
     width: 100%;
-    max-width: 440px;
+    max-width: 540px;
     background: var(--white);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-xl);
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-xl);
 }
 
 .auth-header {

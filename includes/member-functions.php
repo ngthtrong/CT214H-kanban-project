@@ -116,7 +116,7 @@ function memberRemoveMember(int $projectId, int $ownerId, int $memberUserId): ar
 function memberLeaveProject(int $projectId, int $userId): array
 {
     if (memberIsOwner($projectId, $userId)) {
-        return ['success' => false, 'error' => 'Chu du an khong the roi khoi du an. Hay xoa du an neu muon.'];
+        return ['success' => false, 'error' => 'Chu du an khong the roi khoi du an. Hay luu tru du an neu muon.'];
     }
 
     if (!memberIsMember($projectId, $userId)) {
@@ -147,9 +147,12 @@ function memberLeaveProject(int $projectId, int $userId): array
  */
 function memberRequestJoin(int $projectId, int $userId): array
 {
-    $project = dbQueryOne('SELECT project_id, project_name FROM projects WHERE project_id = ?', [$projectId]);
+    $project = dbQueryOne(
+        'SELECT project_id, project_name FROM projects WHERE project_id = ? AND is_archived = 0',
+        [$projectId]
+    );
     if (!$project) {
-        return ['success' => false, 'error' => 'Du an khong ton tai'];
+        return ['success' => false, 'error' => 'Du an khong ton tai hoac da duoc luu tru'];
     }
 
     if (memberIsMember($projectId, $userId)) {
@@ -213,7 +216,7 @@ function memberApproveJoinRequest(int $requestId, int $ownerId): array
         'SELECT jr.*, p.owner_id
          FROM project_join_requests jr
          JOIN projects p ON jr.project_id = p.project_id
-         WHERE jr.request_id = ?',
+         WHERE jr.request_id = ? AND p.is_archived = 0',
         [$requestId]
     );
 
@@ -261,7 +264,7 @@ function memberRejectJoinRequest(int $requestId, int $ownerId): array
         'SELECT jr.*, p.owner_id
          FROM project_join_requests jr
          JOIN projects p ON jr.project_id = p.project_id
-         WHERE jr.request_id = ?',
+         WHERE jr.request_id = ? AND p.is_archived = 0',
         [$requestId]
     );
 
@@ -302,7 +305,7 @@ function memberGetUserPendingRequests(int $userId): array
          FROM project_join_requests jr
          JOIN projects p ON jr.project_id = p.project_id
          JOIN users u ON p.owner_id = u.user_id
-         WHERE jr.user_id = ?
+         WHERE jr.user_id = ? AND p.is_archived = 0
          ORDER BY jr.requested_at DESC',
         [$userId]
     );
@@ -312,12 +315,21 @@ function memberGetUserPendingRequests(int $userId): array
 
 function memberIsMember(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1
+         FROM project_members pm
+         JOIN projects p ON p.project_id = pm.project_id
+         WHERE pm.project_id = ? AND pm.user_id = ? AND p.is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }
 
 function memberIsOwner(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ? AND is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }

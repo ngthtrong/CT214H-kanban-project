@@ -1,6 +1,10 @@
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/component-interaction.pdf}
-\caption{Component interaction from UI events to persistent storage}
+\IfFileExists{diagrams/generated/component-interaction.pdf}{%
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/component-interaction.pdf}%
+}{%
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/component-interaction.png}%
+}
+\caption{Component interaction in vertical up/down layout}
 \label{fig:component-interaction}
 \end{figure}

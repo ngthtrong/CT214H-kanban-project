@@ -76,7 +76,7 @@ function taskGet(int $taskId, int $userId): array
          FROM tasks t
          LEFT JOIN users u ON t.assigned_to = u.user_id
          JOIN projects p ON t.project_id = p.project_id
-         WHERE t.task_id = ?',
+            WHERE t.task_id = ? AND t.is_archived = 0 AND p.is_archived = 0',
         [$taskId]
     );
 
@@ -92,6 +92,7 @@ function taskGet(int $taskId, int $userId): array
     $task['is_assigned'] = ((int) $task['assigned_to'] === $userId);
     $task['can_edit'] = $task['is_owner'] || $task['is_assigned'];
     $task['can_delete'] = $task['is_owner'];
+    $task['can_archive'] = $task['is_owner'];
     $task['assignee_name'] = $task['assigned_name'];
 
     return ['success' => true, 'data' => $task];
@@ -110,8 +111,33 @@ function taskGetProjectTasks(int $projectId, int $userId): array
         'SELECT t.*, u.username as assigned_username, u.full_name as assigned_name, u.avatar as assigned_avatar
          FROM tasks t
          LEFT JOIN users u ON t.assigned_to = u.user_id
-         WHERE t.project_id = ?
+            WHERE t.project_id = ? AND t.is_archived = 0
          ORDER BY t.priority DESC, t.due_date ASC, t.created_at DESC',
+        [$projectId]
+    );
+
+    foreach ($tasks as &$task) {
+        $task['assignee_name'] = $task['assigned_name'];
+    }
+
+    return ['success' => true, 'data' => $tasks];
+}
+
+/**
+ * Get archived tasks of a project
+ */
+function taskGetArchivedProjectTasks(int $projectId, int $userId): array
+{
+    if (!taskIsMember($projectId, $userId)) {
+        return ['success' => false, 'error' => 'Ban khong co quyen xem tasks cua du an nay'];
+    }
+
+    $tasks = dbQuery(
+        'SELECT t.*, u.username as assigned_username, u.full_name as assigned_name, u.avatar as assigned_avatar
+         FROM tasks t
+         LEFT JOIN users u ON t.assigned_to = u.user_id
+         WHERE t.project_id = ? AND t.is_archived = 1
+         ORDER BY t.archived_at DESC, t.updated_at DESC',
         [$projectId]
     );
 
@@ -263,6 +289,71 @@ function taskDelete(int $taskId, int $userId): array
 }
 
 /**
+ * Archive task (soft delete)
+ */
+function taskArchive(int $taskId, int $userId): array
+{
+    $task = _taskGetBasic($taskId);
+    if (!$task) {
+        return ['success' => false, 'error' => 'Task khong ton tai hoac da duoc luu tru'];
+    }
+
+    if (!taskIsOwner((int) $task['project_id'], $userId)) {
+        return ['success' => false, 'error' => 'Chi chu du an moi co the luu tru task'];
+    }
+
+    try {
+        dbUpdate('tasks', [
+            'is_archived' => 1,
+            'archived_at' => date('Y-m-d H:i:s')
+        ], 'task_id = ?', [$taskId]);
+
+        return ['success' => true, 'message' => 'Luu tru task thanh cong'];
+    } catch (Exception $e) {
+        error_log('Archive task failed: ' . $e->getMessage());
+        return ['success' => false, 'error' => 'Khong the luu tru task'];
+    }
+}
+
+/**
+ * Unarchive task
+ */
+function taskUnarchive(int $taskId, int $userId): array
+{
+    $task = dbQueryOne(
+        'SELECT t.task_id, t.project_id, t.is_archived, p.owner_id
+         FROM tasks t
+         JOIN projects p ON t.project_id = p.project_id
+         WHERE t.task_id = ? AND p.is_archived = 0',
+        [$taskId]
+    );
+
+    if (!$task) {
+        return ['success' => false, 'error' => 'Task khong ton tai'];
+    }
+
+    if ((int) $task['owner_id'] !== $userId) {
+        return ['success' => false, 'error' => 'Chi chu du an moi co the bo luu tru task'];
+    }
+
+    if ((int) $task['is_archived'] === 0) {
+        return ['success' => true, 'message' => 'Task da o trang thai hoat dong'];
+    }
+
+    try {
+        dbUpdate('tasks', [
+            'is_archived' => 0,
+            'archived_at' => null
+        ], 'task_id = ?', [$taskId]);
+
+        return ['success' => true, 'message' => 'Khoi phuc task thanh cong'];
+    } catch (Exception $e) {
+        error_log('Unarchive task failed: ' . $e->getMessage());
+        return ['success' => false, 'error' => 'Khong the khoi phuc task'];
+    }
+}
+
+/**
  * Claim task
  */
 function taskClaim(int $taskId, int $userId): array
@@ -324,20 +415,32 @@ function taskUpdateAttachment(int $taskId, int $userId, ?string $attachmentPath)
 function _taskGetBasic(int $taskId): ?array
 {
     return dbQueryOne(
-        'SELECT t.*, p.owner_id FROM tasks t JOIN projects p ON t.project_id = p.project_id WHERE t.task_id = ?',
+        'SELECT t.*, p.owner_id
+         FROM tasks t
+         JOIN projects p ON t.project_id = p.project_id
+         WHERE t.task_id = ? AND t.is_archived = 0 AND p.is_archived = 0',
         [$taskId]
     );
 }
 
 function taskIsMember(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1
+         FROM project_members pm
+         JOIN projects p ON p.project_id = pm.project_id
+         WHERE pm.project_id = ? AND pm.user_id = ? AND p.is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }
 
 function taskIsOwner(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ? AND is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }
 
@@ -350,7 +453,7 @@ function searchProjectTasks(int $projectId, int $userId, array $filters = []): a
         return ['success' => false, 'error' => 'Ban khong co quyen truy cap du an nay'];
     }
 
-    $conditions = ['t.project_id = ?'];
+    $conditions = ['t.project_id = ?', 't.is_archived = 0'];
     $params = [$projectId];
 
     if (!empty($filters['search'])) {
@@ -460,7 +563,7 @@ function searchGetFilterOptions(int $projectId, int $userId): array
 
     $statusCounts = dbQuery(
         'SELECT column_status, COUNT(*) as count
-         FROM tasks WHERE project_id = ?
+         FROM tasks WHERE project_id = ? AND is_archived = 0
          GROUP BY column_status',
         [$projectId]
     );
@@ -472,7 +575,7 @@ function searchGetFilterOptions(int $projectId, int $userId): array
 
     $priorityCounts = dbQuery(
         'SELECT priority, COUNT(*) as count
-         FROM tasks WHERE project_id = ?
+         FROM tasks WHERE project_id = ? AND is_archived = 0
          GROUP BY priority',
         [$projectId]
     );

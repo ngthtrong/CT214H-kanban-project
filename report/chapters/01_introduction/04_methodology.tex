@@ -4,10 +4,10 @@
 
 The codebase follows a pragmatic layered design:
 \begin{itemize}
-    \item UI pages under \code{public/} render views and bootstrap JavaScript modules.
+    \item UI pages are root-level PHP controllers (such as \code{index.php}, \code{project.php}, \code{members.php}, \code{join-requests.php}, \code{search.php}, and \code{task.php}) that render views and bootstrap JavaScript modules.
     \item REST-style endpoints under \code{api/} expose feature operations.
-    \item Business logic resides in service classes under \code{src/}.
-    \item Shared helpers (session, auth, utility, DB access) reside in \code{includes/}.
+    \item Business logic is implemented by domain modules in \code{includes/auth-functions.php}, \code{includes/project-functions.php}, \code{includes/member-functions.php}, \code{includes/task-functions.php}, and \code{includes/upload-functions.php}.
+    \item Shared helpers for session, config, utility, and DB access reside in \code{includes/session.php}, \code{includes/config.php}, \code{includes/functions.php}, and \code{includes/db-connect.php}.
     \item Relational schema and seed data are versioned in \code{database/schema.sql} and \code{database/sample-data.sql}.
 \end{itemize}
 
@@ -15,7 +15,7 @@ The codebase follows a pragmatic layered design:
 
 To keep this report technically verifiable, each chapter maps to concrete assets:
 \begin{itemize}
-    \item Architecture chapter maps to \code{public/}, \code{api/}, \code{src/}, and JavaScript orchestration.
+    \item Architecture chapter maps to root page controllers (for example \code{index.php} and \code{project.php}), \code{api/}, \code{includes/}, and JavaScript orchestration in \code{js/}.
     \item Database chapter maps to \code{database/schema.sql} and SQL constraints.
     \item Feature chapter maps to use cases UC1--UC6 and related source files.
     \item Challenge chapter maps to implementation decisions visible in code and project notes.

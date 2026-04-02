@@ -127,6 +127,7 @@ export function createTaskModalController(config) {
         detailBody: document.getElementById('taskDetailBody'),
         detailTitle: document.getElementById('taskDetailTitle'),
         editButton: document.getElementById('editTaskBtn'),
+        archiveButton: document.getElementById('archiveTaskBtn'),
         deleteButton: document.getElementById('deleteTaskBtn'),
         attachmentUploadButton: document.getElementById('uploadAttachmentBtn'),
         attachmentUploadInput: document.getElementById('edit_attachment_upload'),
@@ -307,6 +308,26 @@ export function createTaskModalController(config) {
         }
     };
 
+    const archiveTask = async (taskId) => {
+        if (!window.confirm('Bạn có chắc chắn muốn lưu trữ task này? Task sẽ bị ẩn khỏi board.')) {
+            return;
+        }
+
+        try {
+            await requestJson(
+                `api/tasks.php?id=${taskId}&action=archive`,
+                createJsonRequestOptions('PUT', {}),
+                'Không thể lưu trữ task'
+            );
+
+            safeNotify('Đã lưu trữ task', 'success');
+            closeModal('taskDetailModal');
+            await refreshTasks();
+        } catch (error) {
+            safeNotify(`Lỗi: ${error.message}`, 'error');
+        }
+    };
+
     const editTask = async (taskId) => {
         try {
             const result = await requestJson(`api/tasks.php?id=${taskId}`, {}, 'Không thể tải task');
@@ -349,6 +370,15 @@ export function createTaskModalController(config) {
                 elements.deleteButton.onclick = task.can_delete
                     ? () => {
                         deleteTask(task.task_id);
+                    }
+                    : null;
+            }
+
+            if (elements.archiveButton) {
+                elements.archiveButton.style.display = task.can_archive ? 'inline-block' : 'none';
+                elements.archiveButton.onclick = task.can_archive
+                    ? () => {
+                        archiveTask(task.task_id);
                     }
                     : null;
             }

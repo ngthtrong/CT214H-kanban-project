@@ -263,6 +263,108 @@ async function loadTasks(filters = {}) {
     }
 }
 
+async function loadArchivedTasks() {
+    const container = document.getElementById('archivedTasksContainer');
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '<p class="text-muted">Đang tải task đã lưu trữ...</p>';
+
+    try {
+        const result = await requestJson(
+            `api/tasks.php?project_id=${PROJECT_ID}&archived=1`,
+            {},
+            'Không thể tải task đã lưu trữ'
+        );
+
+        const archivedTasks = normalizeTaskList(result.data);
+        if (archivedTasks.length === 0) {
+            container.innerHTML = '<p class="text-muted">Chưa có task nào trong kho lưu trữ.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                ${archivedTasks.map(task => `
+                    <div class="card" style="box-shadow: var(--shadow-sm);">
+                        <div class="card-body" style="padding: 1rem; display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start;">
+                            <div>
+                                <h4 style="margin-bottom: 0.25rem;">${escapeHtml(task.task_title)}</h4>
+                                <p class="text-muted" style="margin-bottom: 0.5rem;">
+                                    ${task.description ? escapeHtml(task.description) : 'Không có mô tả'}
+                                </p>
+                                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.875rem; color: var(--gray-600);">
+                                    <span>Ưu tiên: ${escapeHtml(task.priority || '-')}</span>
+                                    <span>Trạng thái: ${escapeHtml(task.column_status || '-')}</span>
+                                    <span>Người thực hiện: ${task.assignee_name ? escapeHtml(task.assignee_name) : 'Chưa gán'}</span>
+                                    <span>Lưu trữ lúc: ${task.archived_at ? formatDateTime(task.archived_at) : '-'}</span>
+                                </div>
+                            </div>
+                            ${IS_OWNER ? `
+                                <button type="button"
+                                        class="btn btn-outline btn-sm unarchive-task-btn"
+                                        data-task-id="${task.task_id}"
+                                        data-task-title="${encodeURIComponent(task.task_title || '')}">
+                                    Bỏ lưu trữ
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ${!IS_OWNER ? '<p class="text-muted" style="margin-top: 0.75rem;">Chỉ chủ dự án mới có thể bỏ lưu trữ task.</p>' : ''}
+        `;
+
+        container.querySelectorAll('.unarchive-task-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const taskId = this.dataset.taskId;
+                const taskTitle = this.dataset.taskTitle
+                    ? decodeURIComponent(this.dataset.taskTitle)
+                    : 'task nay';
+
+                await unarchiveTask(taskId, taskTitle);
+            });
+        });
+    } catch (error) {
+        console.error('Load archived tasks failed:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Lỗi:</strong> ${escapeHtml(error.message)}
+            </div>
+        `;
+    }
+}
+
+async function unarchiveTask(taskId, taskTitle) {
+    if (!taskId) {
+        return;
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn bỏ lưu trữ "${taskTitle}"?`)) {
+        return;
+    }
+
+    try {
+        const result = await requestJson(
+            `api/tasks.php?id=${taskId}&action=unarchive`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            },
+            'Khong the khoi phuc task'
+        );
+
+        showToast(result.message || 'Đã bỏ lưu trữ task', 'success');
+        await Promise.all([loadTasks(state.filters), loadArchivedTasks()]);
+    } catch (error) {
+        showToast(`Lỗi: ${error.message}`, 'error');
+    }
+}
+
 async function loadMembers() {
     try {
         state.members = await fetchProjectMembers(PROJECT_ID);
@@ -309,6 +411,60 @@ function bindProjectCodeActions() {
         button.addEventListener('click', async () => {
             await copyProjectCode(button.dataset.copyProjectCode || '');
         });
+    });
+}
+
+async function archiveCurrentProject() {
+    if (!IS_OWNER) {
+        return;
+    }
+
+    const projectName = typeof PROJECT_NAME === 'string' ? PROJECT_NAME : 'du an nay';
+    if (!window.confirm(`Bạn có chắc muốn lưu trữ "${projectName}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
+        return;
+    }
+
+    try {
+        const result = await requestJson(
+            `api/projects.php?id=${PROJECT_ID}&action=archive`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            },
+            'Khong the luu tru du an'
+        );
+
+        showToast(result.message || 'Da luu tru du an', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.php';
+        }, 500);
+    } catch (error) {
+        showToast(`Lỗi: ${error.message}`, 'error');
+    }
+}
+
+function bindProjectArchiveAction() {
+    const button = document.getElementById('archiveProjectBtn');
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        await archiveCurrentProject();
+    });
+}
+
+function bindArchivedTasksAction() {
+    const button = document.getElementById('viewArchivedTasksBtn');
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        await loadArchivedTasks();
     });
 }
 
@@ -359,6 +515,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     taskModalController.init();
     bindFilters();
     bindProjectCodeActions();
+    bindProjectArchiveAction();
+    bindArchivedTasksAction();
 
     await loadProjectData();
 });

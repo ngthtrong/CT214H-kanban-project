@@ -2,10 +2,10 @@
 
 \subsection{Routing and Runtime}
 
-At runtime, \code{index.php} redirects users based on login state:
+At runtime, \code{index.php} enforces login state as follows:
 \begin{itemize}
-    \item Authenticated users are redirected to \code{public/dashboard.php}.
-    \item Guests are redirected to \code{public/login.php}.
+    \item Guests are redirected to \code{login.php}.
+    \item Authenticated users stay on \code{index.php} (dashboard) and navigate to feature pages such as \code{project.php}, \code{members.php}, \code{join-requests.php}, \code{search.php}, and \code{task.php}.
 \end{itemize}
 
 From the dashboard, all major interactions are asynchronous and API-driven.

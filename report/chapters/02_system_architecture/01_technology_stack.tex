@@ -9,11 +9,11 @@ The system uses a classic web stack aligned with CT214H project constraints.
 \toprule
 \textbf{Layer} & \textbf{Technology and Role} \\
 \midrule
-Frontend & HTML5 templates in \code{public/}, CSS in \code{css/}, JavaScript modules in \code{js/}. \\
+Frontend & Root-level PHP pages (for example \code{index.php}, \code{project.php}, and \code{task.php}) with CSS in \code{css/} and JavaScript modules in \code{js/}. \\
 Backend API & PHP endpoints in \code{api/} handling authentication, project, member, task, and upload operations. \\
-Application Logic & Service classes in \code{src/} encapsulating business rules and permission checks. \\
+Application Logic & Domain function modules in \code{includes/*-functions.php} encapsulating business rules and permission checks. \\
 Data Access & PDO helper functions in \code{includes/db-connect.php}; relational schema in MySQL 8.x. \\
-Quality Tooling & Composer scripts for PHPUnit, PHPCS, and PHPMD quality checks. \\
+Quality Tooling & Static-analysis configuration with \code{.phpcs.xml} and \code{phpmd.xml}; report build with XeLaTeX. \\
 \bottomrule
 \end{tabular}
 \end{table}

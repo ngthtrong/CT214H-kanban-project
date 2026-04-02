@@ -63,7 +63,7 @@ function projectGet(int $projectId, int $userId): array
         'SELECT p.*, u.username as owner_username, u.full_name as owner_name
          FROM projects p
          JOIN users u ON p.owner_id = u.user_id
-         WHERE p.project_id = ?',
+         WHERE p.project_id = ? AND p.is_archived = 0',
         [$projectId]
     );
 
@@ -86,11 +86,33 @@ function projectGetUserProjects(int $userId): array
     $projects = dbQuery(
         'SELECT p.*, u.full_name as owner_name, pm.role as user_role,
                 (SELECT COUNT(*) FROM project_members WHERE project_id = p.project_id) as member_count,
-                (SELECT COUNT(*) FROM tasks WHERE project_id = p.project_id) as task_count
+                (SELECT COUNT(*) FROM tasks WHERE project_id = p.project_id AND is_archived = 0) as task_count
          FROM projects p
          JOIN users u ON p.owner_id = u.user_id
          JOIN project_members pm ON p.project_id = pm.project_id AND pm.user_id = ?
+         WHERE p.is_archived = 0
          ORDER BY p.updated_at DESC',
+        [$userId]
+    );
+
+    return ['success' => true, 'data' => $projects];
+}
+
+/**
+ * Get archived projects of a user
+ */
+function projectGetUserArchivedProjects(int $userId): array
+{
+    $projects = dbQuery(
+        'SELECT p.*, u.full_name as owner_name, pm.role as user_role,
+                (SELECT COUNT(*) FROM project_members WHERE project_id = p.project_id) as member_count,
+                (SELECT COUNT(*) FROM tasks WHERE project_id = p.project_id AND is_archived = 0) as active_task_count,
+                (SELECT COUNT(*) FROM tasks WHERE project_id = p.project_id AND is_archived = 1) as archived_task_count
+         FROM projects p
+         JOIN users u ON p.owner_id = u.user_id
+         JOIN project_members pm ON p.project_id = pm.project_id AND pm.user_id = ?
+         WHERE p.is_archived = 1
+         ORDER BY p.archived_at DESC, p.updated_at DESC',
         [$userId]
     );
 
@@ -154,6 +176,72 @@ function projectDelete(int $projectId, int $userId): array
 }
 
 /**
+ * Archive project (soft delete)
+ */
+function projectArchive(int $projectId, int $userId): array
+{
+    $project = dbQueryOne(
+        'SELECT project_id, is_archived
+         FROM projects
+         WHERE project_id = ? AND owner_id = ?',
+        [$projectId, $userId]
+    );
+
+    if (!$project) {
+        return ['success' => false, 'error' => 'Chi chu du an moi co the luu tru'];
+    }
+
+    if ((int) $project['is_archived'] === 1) {
+        return ['success' => true, 'message' => 'Du an da duoc luu tru truoc do'];
+    }
+
+    try {
+        dbUpdate('projects', [
+            'is_archived' => 1,
+            'archived_at' => date('Y-m-d H:i:s')
+        ], 'project_id = ?', [$projectId]);
+
+        return ['success' => true, 'message' => 'Luu tru du an thanh cong'];
+    } catch (Exception $e) {
+        error_log('Project archive failed: ' . $e->getMessage());
+        return ['success' => false, 'error' => 'Khong the luu tru du an'];
+    }
+}
+
+/**
+ * Unarchive project
+ */
+function projectUnarchive(int $projectId, int $userId): array
+{
+    $project = dbQueryOne(
+        'SELECT project_id, is_archived
+         FROM projects
+         WHERE project_id = ? AND owner_id = ?',
+        [$projectId, $userId]
+    );
+
+    if (!$project) {
+        return ['success' => false, 'error' => 'Chi chu du an moi co the bo luu tru'];
+    }
+
+    if ((int) $project['is_archived'] === 0) {
+        return ['success' => true, 'message' => 'Du an da o trang thai hoat dong'];
+    }
+
+    try {
+        dbUpdate('projects', [
+            'is_archived' => 0,
+            'archived_at' => null
+        ], 'project_id = ?', [$projectId]);
+
+        return ['success' => true, 'message' => 'Khoi phuc du an thanh cong'];
+    } catch (Exception $e) {
+        error_log('Project unarchive failed: ' . $e->getMessage());
+        return ['success' => false, 'error' => 'Khong the khoi phuc du an'];
+    }
+}
+
+/**
  * Find project by code
  */
 function projectFindByCode(string $code): array
@@ -164,7 +252,7 @@ function projectFindByCode(string $code): array
         'SELECT p.*, u.username as owner_username, u.full_name as owner_name
          FROM projects p
          JOIN users u ON p.owner_id = u.user_id
-         WHERE p.project_code = ?',
+         WHERE p.project_code = ? AND p.is_archived = 0',
         [$code]
     );
 
@@ -189,7 +277,10 @@ function projectFindByCode(string $code): array
  */
 function projectIsOwner(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1 FROM projects WHERE project_id = ? AND owner_id = ? AND is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }
 
@@ -198,7 +289,13 @@ function projectIsOwner(int $projectId, int $userId): bool
  */
 function projectIsMember(int $projectId, int $userId): bool
 {
-    $result = dbQueryOne('SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?', [$projectId, $userId]);
+    $result = dbQueryOne(
+        'SELECT 1
+         FROM project_members pm
+         JOIN projects p ON p.project_id = pm.project_id
+         WHERE pm.project_id = ? AND pm.user_id = ? AND p.is_archived = 0',
+        [$projectId, $userId]
+    );
     return $result !== null;
 }
 
@@ -209,9 +306,9 @@ function projectGetStats(int $projectId): array
 {
     $stats = dbQueryOne(
         'SELECT
-            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND column_status = "todo") as todo_count,
-            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND column_status = "in_progress") as in_progress_count,
-            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND column_status = "done") as done_count,
+            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND is_archived = 0 AND column_status = "todo") as todo_count,
+            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND is_archived = 0 AND column_status = "in_progress") as in_progress_count,
+            (SELECT COUNT(*) FROM tasks WHERE project_id = ? AND is_archived = 0 AND column_status = "done") as done_count,
             (SELECT COUNT(*) FROM project_members WHERE project_id = ?) as member_count,
             (SELECT COUNT(*) FROM project_join_requests WHERE project_id = ? AND status = "pending") as pending_requests',
         [$projectId, $projectId, $projectId, $projectId, $projectId]

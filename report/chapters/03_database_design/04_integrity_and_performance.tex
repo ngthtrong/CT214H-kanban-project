@@ -5,7 +5,7 @@
 Data consistency is enforced at two levels:
 \begin{itemize}
     \item \textbf{Database level}: primary keys, foreign keys, enum domains, and unique constraints.
-    \item \textbf{Application level}: service-layer permission checks before insert/update/delete operations.
+    \item \textbf{Application level}: permission checks in \code{includes/project-functions.php}, \code{includes/member-functions.php}, and \code{includes/task-functions.php} before insert/update/delete operations.
 \end{itemize}
 
 This dual-layer approach protects against both accidental UI misuse and direct API misuse.
@@ -20,4 +20,4 @@ The schema includes indexes tailored to frequent operations:
 \end{itemize}
 
 Search and filtering logic uses prepared statements and condition composition in
-\code{src/Search/SearchService.php}, reducing SQL injection risk and keeping query plans index-friendly.
+\code{includes/task-functions.php} (notably \code{searchProjectTasks}), reducing SQL injection risk and keeping query plans index-friendly.

@@ -51,16 +51,20 @@
     pdfauthor={CT214H Team}
 }
 
+\newcommand{\headmarkfont}{\fontsize{9}{11}\selectfont}
+\newcommand{\smallleftmark}{{\headmarkfont\leftmark}}
+\newcommand{\smallrightmark}{{\headmarkfont\rightmark}}
+
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{Team Kanban - CT214H}
-\fancyhead[R]{\leftmark}
+\fancyhead[R]{\smallleftmark}
 \fancyfoot[C]{\thepage}
 
 \fancypagestyle{landscapefancy}{
   \fancyhf{}
   \fancyhead[L]{\smash{\rotatebox{0}{Team Kanban - CT214H}}}
-  \fancyhead[R]{\smash{\rotatebox{0}{\leftmark}}}
+  \fancyhead[R]{\smash{\rotatebox{0}{\smallleftmark}}}
   \fancyfoot[C]{\smash{\rotatebox{0}{\thepage}}}
 }
 

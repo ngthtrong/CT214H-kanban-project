@@ -1,14 +1,18 @@
 \newcommand{\code}[1]{\nolinkurl{#1}}
 
-\newcommand{\screenshotplaceholder}[3][0.28\textheight]{
+\newcommand{\screenshotplaceholder}[3][0.28\textheight]{%
 \begin{figure}[H]
     \centering
-    \fbox{\begin{minipage}[c][#1][c]{0.9\textwidth}
-        \centering
-        \textbf{Screenshot Placeholder}\\[0.5em]
-        #2\\[0.5em]
-        \textit{Insert image file under report/assets/screenshots/#3}
-    \end{minipage}}
+    \IfFileExists{assets/screenshots/#3}{%
+        \includegraphics[width=0.95\textwidth,height=#1,keepaspectratio]{assets/screenshots/#3}%
+    }{%
+        \fbox{\begin{minipage}[c][#1][c]{0.9\textwidth}
+            \centering
+            \textbf{Screenshot Placeholder}\\[0.5em]
+            #2\\[0.5em]
+            \textit{Insert image file under report/assets/screenshots/#3}
+        \end{minipage}}%
+    }
     \caption{#2}
     \label{fig:#3}
 \end{figure}
