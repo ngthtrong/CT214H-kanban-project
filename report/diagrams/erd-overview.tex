@@ -1,13 +1,17 @@
-\clearpage
 \begin{landscape}
 \thispagestyle{landscapefancy}
-\begin{figure}[H]
 \centering
+\IfFileExists{diagrams/generated/erd-overview.png}{%
 \makebox[\linewidth][c]{%
-\includegraphics[width=0.90\paperheight,height=0.90\paperwidth,keepaspectratio]{diagrams/generated/erd-overview.pdf}%
+\includegraphics[width=0.90\paperheight,height=0.64\paperwidth,keepaspectratio]{diagrams/generated/erd-overview.png}%
 }
-\caption{ERD overview derived from \code{database/schema.sql}}
+}{%
+\makebox[\linewidth][c]{%
+\includegraphics[width=0.90\paperheight,height=0.64\paperwidth,keepaspectratio]{diagrams/generated/erd-overview.pdf}%
+}
+}
+\par\medskip
+\captionof{figure}{ERD overview derived from \code{database/schema.sql} with archive fields}
 \label{fig:erd-overview}
-\end{figure}
 \end{landscape}
 \clearpage

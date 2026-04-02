@@ -5,6 +5,7 @@
  * 
  * Endpoints:
  * GET    /api/tasks.php?project_id={id}              - Get all tasks for project
+ * GET    /api/tasks.php?project_id={id}&archived=1   - Get archived tasks for project
  * GET    /api/tasks.php?project_id={id}&search=...   - Search/filter tasks with pagination
  * GET    /api/tasks.php?project_id={id}&filters=1    - Get filter options
  * GET    /api/tasks.php?id={id}                      - Get single task
@@ -12,6 +13,8 @@
  * PUT    /api/tasks.php?id={id}                      - Update task
  * PUT    /api/tasks.php?id={id}&action=status        - Update status only (drag & drop)
  * PUT    /api/tasks.php?id={id}&action=claim         - Claim task
+ * PUT    /api/tasks.php?id={id}&action=archive       - Archive task (soft delete)
+ * PUT    /api/tasks.php?id={id}&action=unarchive     - Unarchive task
  * DELETE /api/tasks.php?id={id}                      - Delete task
  */
 
@@ -62,6 +65,12 @@ function handleGet(int $userId): void
     // Get all tasks for project
     if (isset($_GET['project_id'])) {
         $projectId = (int) $_GET['project_id'];
+
+        // Get archived tasks
+        if (isset($_GET['archived'])) {
+            $result = taskGetArchivedProjectTasks($projectId, $userId);
+            jsonResponse($result, $result['success'] ? 200 : 403);
+        }
         
         // Get filter options
         if (isset($_GET['filters'])) {
@@ -133,6 +142,16 @@ function handlePut(int $userId): void
         case 'claim':
             // Claim task for self
             $result = taskClaim($taskId, $userId);
+            break;
+
+        case 'archive':
+            // Archive task (soft delete)
+            $result = taskArchive($taskId, $userId);
+            break;
+
+        case 'unarchive':
+            // Unarchive task
+            $result = taskUnarchive($taskId, $userId);
             break;
         
         default:

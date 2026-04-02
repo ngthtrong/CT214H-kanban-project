@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProjects();
     initCreateProjectForm();
     initJoinProjectForm();
+    initArchivedProjectsModal();
 });
 
 /**
@@ -48,10 +49,23 @@ async function loadProjects() {
         // Add click handlers
         document.querySelectorAll('.project-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                if (!e.target.closest('.btn-copy')) {
+                if (!e.target.closest('.btn-copy') && !e.target.closest('.project-action-btn')) {
                     const projectId = this.dataset.projectId;
                     window.location.href = `project.php?id=${projectId}`;
                 }
+            });
+        });
+
+        document.querySelectorAll('.project-archive-btn').forEach(button => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const projectId = this.dataset.projectId;
+                const projectName = this.dataset.projectName
+                    ? decodeURIComponent(this.dataset.projectName)
+                    : 'du an nay';
+                await archiveProject(projectId, projectName);
             });
         });
         
@@ -101,11 +115,180 @@ function renderProjectCard(project) {
             </div>
             
             <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
-                <span class="project-card-code">${project.project_code}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="project-card-code">${project.project_code}</span>
+                    ${project.user_role === 'owner' ? `
+                        <button type="button"
+                                class="btn btn-outline btn-sm project-action-btn project-archive-btn"
+                                data-project-id="${project.project_id}"
+                                data-project-name="${encodeURIComponent(project.project_name)}">
+                            Lưu trữ
+                        </button>
+                    ` : ''}
+                </div>
                 <small class="text-muted">${timeAgo(project.updated_at)}</small>
             </div>
         </div>
     `;
+}
+
+/**
+ * Archive project
+ */
+async function archiveProject(projectId, projectName) {
+    if (!projectId) {
+        return;
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn lưu trữ "${projectName}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`api/projects.php?id=${projectId}&action=archive`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Khong the luu tru du an');
+        }
+
+        showNotification(result.message || 'Da luu tru du an', 'success');
+        await loadProjects();
+    } catch (error) {
+        console.error('Archive project failed:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
+/**
+ * Initialize archived projects modal
+ */
+function initArchivedProjectsModal() {
+    const button = document.getElementById('viewArchivedProjectsBtn');
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', async function() {
+        await loadArchivedProjects();
+    });
+}
+
+/**
+ * Load archived projects
+ */
+async function loadArchivedProjects() {
+    const container = document.getElementById('archivedProjectsContainer');
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '<p class="text-muted">Đang tải dự án đã lưu trữ...</p>';
+
+    try {
+        const response = await fetch('api/projects.php?archived=1');
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Không thể tải dự án đã lưu trữ');
+        }
+
+        const projects = result.data || [];
+        if (projects.length === 0) {
+            container.innerHTML = '<p class="text-muted">Chưa có dự án nào trong kho lưu trữ.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                ${projects.map(project => `
+                    <div class="card" style="box-shadow: var(--shadow-sm);">
+                        <div class="card-body" style="padding: 1rem; display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start;">
+                            <div>
+                                <h4 style="margin-bottom: 0.25rem;">${escapeHtml(project.project_name)}</h4>
+                                <p class="text-muted" style="margin-bottom: 0.5rem;">
+                                    ${project.description ? escapeHtml(project.description) : 'Không có mô tả'}
+                                </p>
+                                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.875rem; color: var(--gray-600);">
+                                    <span>Mã: ${escapeHtml(project.project_code)}</span>
+                                    <span>Thành viên: ${project.member_count || 0}</span>
+                                    <span>Task hoạt động: ${project.active_task_count || 0}</span>
+                                    <span>Task lưu trữ: ${project.archived_task_count || 0}</span>
+                                    <span>Lưu trữ lúc: ${project.archived_at ? formatDateTime(project.archived_at) : '-'}</span>
+                                </div>
+                            </div>
+                            ${project.user_role === 'owner' ? `
+                                <button type="button"
+                                        class="btn btn-outline btn-sm unarchive-project-btn"
+                                        data-project-id="${project.project_id}"
+                                        data-project-name="${encodeURIComponent(project.project_name)}">
+                                    Bỏ lưu trữ
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        container.querySelectorAll('.unarchive-project-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const projectId = this.dataset.projectId;
+                const projectName = this.dataset.projectName
+                    ? decodeURIComponent(this.dataset.projectName)
+                    : 'du an nay';
+
+                await unarchiveProject(projectId, projectName);
+            });
+        });
+    } catch (error) {
+        console.error('Load archived projects failed:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Lỗi:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
+
+/**
+ * Unarchive project
+ */
+async function unarchiveProject(projectId, projectName) {
+    if (!projectId) {
+        return;
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn bỏ lưu trữ "${projectName}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`api/projects.php?id=${projectId}&action=unarchive`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Khong the khoi phuc du an');
+        }
+
+        showNotification(result.message || 'Đã bỏ lưu trữ dự án', 'success');
+        await Promise.all([loadProjects(), loadArchivedProjects()]);
+    } catch (error) {
+        console.error('Unarchive project failed:', error);
+        showNotification(error.message, 'error');
+    }
 }
 
 /**
@@ -290,4 +473,12 @@ function timeAgo(datetime) {
     if (diff < 604800) return Math.floor(diff / 86400) + ' ngày trước';
     
     return new Date(datetime).toLocaleDateString('vi-VN');
+}
+
+function formatDateTime(datetime) {
+    if (!datetime) {
+        return '';
+    }
+
+    return new Date(datetime).toLocaleString('vi-VN');
 }

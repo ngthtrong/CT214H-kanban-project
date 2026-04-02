@@ -35,12 +35,15 @@ CREATE TABLE IF NOT EXISTS projects (
     project_name VARCHAR(100) NOT NULL,
     description TEXT DEFAULT NULL,
     project_code VARCHAR(10) NOT NULL UNIQUE COMMENT '8-character random code for joining',
+    is_archived TINYINT(1) NOT NULL DEFAULT 0,
+    archived_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE,
     INDEX idx_owner (owner_id),
-    INDEX idx_project_code (project_code)
+    INDEX idx_project_code (project_code),
+    INDEX idx_project_archived (is_archived)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================================
@@ -91,6 +94,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
     due_date DATE DEFAULT NULL,
     attachment_path VARCHAR(255) DEFAULT NULL,
+    is_archived TINYINT(1) NOT NULL DEFAULT 0,
+    archived_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -100,5 +105,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     INDEX idx_assigned (assigned_to),
     INDEX idx_status (column_status),
     INDEX idx_priority (priority),
-    INDEX idx_due_date (due_date)
+    INDEX idx_due_date (due_date),
+    INDEX idx_task_archived (is_archived),
+    INDEX idx_project_archived (project_id, is_archived)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

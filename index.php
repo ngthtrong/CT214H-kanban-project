@@ -33,6 +33,9 @@ require_once __DIR__ . '/includes/header.php';
                 <a class="btn btn-outline" href="join-project.php">
                     Tham gia dự án
                 </a>
+                <button class="btn btn-outline" id="viewArchivedProjectsBtn" data-modal-open="archivedProjectsModal">
+                    Dự án đã lưu trữ
+                </button>
                 <button class="btn btn-primary" data-modal-open="createProjectModal">
                     Tạo dự án mới
                 </button>
@@ -44,6 +47,24 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="spinner"></div>
                 <p>Đang tải dự án...</p>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archived Projects Modal -->
+<div id="archivedProjectsModal" class="modal-backdrop">
+    <div class="modal modal-large">
+        <div class="modal-header">
+            <h3 class="modal-title">Dự án đã lưu trữ</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="archivedProjectsContainer">
+                <p class="text-muted">Nhấn "Dự án đã lưu trữ" để tải danh sách.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-modal-close>Đóng</button>
         </div>
     </div>
 </div>

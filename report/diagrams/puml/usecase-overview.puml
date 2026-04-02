@@ -1,30 +1,41 @@
-@startuml
-title Use-case overview (UC1 to UC6)
+@startuml usecase-overview
+title Use-case overview (UC1 to UC6) - compact themed layout
 
 left to right direction
-skinparam backgroundColor white
+skinparam backgroundColor #FFFCF4
 skinparam shadowing false
 skinparam packageStyle rectangle
+skinparam roundcorner 12
 skinparam usecase {
-  BackgroundColor #F8FAFC
-  BorderColor #4B5563
+  BorderColor #6B4E16
+  FontColor #1F2937
+  BackgroundColor #FFF8E8
 }
 skinparam actor {
-  BorderColor #1D4ED8
-  FontColor #1E3A8A
+  BorderColor #0E7490
+  FontColor #134E4A
 }
 
 actor "Project Owner" as Owner
 actor "Project Member" as Member
 
-rectangle "Team Kanban System" {
-  usecase "UC1\nAuthentication\nand Profile" as UC1
-  usecase "UC2\nProject Lifecycle\nManagement" as UC2
-  usecase "UC3\nMember Invitation\nand Join Requests" as UC3
-  usecase "UC4\nTask CRUD and\nStatus Transitions" as UC4
-  usecase "UC5\nOwner Assignment\nand Member Claim" as UC5
-  usecase "UC6\nMulti-criteria Search\nand Pagination" as UC6
+rectangle "Team Kanban System" #FFF7E6 {
+  usecase "UC1\nAuthentication\nand Profile" as UC1 #E7F7EA
+  usecase "UC4\nTask CRUD and\nStatus Transitions" as UC4 #E3F2FF
+  usecase "UC2\nProject Lifecycle\nManagement" as UC2 #DFF7F7
+
+  usecase "UC5\nOwner Assignment\nand Member Claim" as UC5 #FFF1C9
+  usecase "UC6\nSearch, Filter\nand Pagination" as UC6 #FFE8C2
+  usecase "UC3\nMember Invitation\nand Join Requests" as UC3 #FFE2E2
 }
+
+UC1 -[hidden]down- UC4
+UC4 -[hidden]down- UC2
+UC5 -[hidden]down- UC6
+UC6 -[hidden]down- UC3
+UC1 -[hidden]right- UC5
+UC4 -[hidden]right- UC6
+UC2 -[hidden]right- UC3
 
 Owner --> UC1
 Owner --> UC2

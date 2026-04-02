@@ -1,38 +1,10 @@
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
-	comp/.style={draw,rounded corners,align=center,minimum width=7.2cm,minimum height=1.25cm,font=\small},
-	helper/.style={draw,rounded corners,align=center,minimum width=4.6cm,minimum height=1.25cm,font=\small},
-	flow/.style={-{Latex[length=2.4mm]},thick}
-]
-	\node[comp,fill=blue!10] (ui) at (0,4.0)
-	{\textbf{Browser UI}\\\code{index.php}, \code{project.php}, ...};
-
-	\node[comp,fill=cyan!10] (js) at (0,2.4)
-	{\textbf{Client Logic}\\\code{js/dashboard.js}, \code{js/kanban.js}, \code{js/search-filter.js}};
-
-	\node[comp,fill=green!10] (api) at (0,0.8)
-	{\textbf{REST Endpoints}\\\code{api/*.php}};
-
-	\node[comp,fill=gray!12] (logic) at (0,-0.8)
-	{\textbf{Domain Logic}\\\code{includes/*-functions.php}};
-
-	\node[comp,fill=orange!12] (db) at (0,-2.4)
-	{\textbf{MySQL Storage}\\users, projects, project\_members,\\project\_join\_requests, tasks};
-
-	\node[helper,fill=yellow!12] (inc) at (5.2,-0.8)
-	{\textbf{Shared Utilities}\\\code{includes/functions.php},\\\code{includes/session.php}};
-
-	\draw[flow] (ui.south) -- node[right,font=\scriptsize]{UI events} (js.north);
-	\draw[flow] (js.south) -- node[right,font=\scriptsize]{fetch JSON} (api.north);
-	\draw[flow] (api.south) -- node[right,font=\scriptsize]{route + auth} (logic.north);
-	\draw[flow] (logic.south) -- node[right,font=\scriptsize]{SQL query} (db.north);
-	\draw[flow] (db.north) -- node[left,font=\scriptsize]{rows} (logic.south);
-	\draw[flow] (logic.north) -- node[left,font=\scriptsize]{service data} (api.south);
-	\draw[flow] (api.north) -- node[left,font=\scriptsize]{JSON response} (js.south);
-	\draw[flow] (js.north) -- node[left,font=\scriptsize]{DOM update} (ui.south);
-	\draw[flow] (inc.west) -- node[above,font=\scriptsize]{session/helpers} (logic.east);
-\end{tikzpicture}
-\caption{Component interaction from UI events to persistent storage}
+\IfFileExists{diagrams/generated/component-interaction.png}{%
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/component-interaction.png}%
+}{%
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{diagrams/generated/component-interaction.pdf}%
+}
+\caption{Component interaction in vertical up/down layout}
 \label{fig:component-interaction}
 \end{figure}

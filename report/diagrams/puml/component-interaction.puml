@@ -1,44 +1,62 @@
 @startuml component-interaction
-title Component interaction from UI events to persistent storage
+title Component interaction in vertical up/down layout
 
 top to bottom direction
 skinparam backgroundColor white
 skinparam shadowing false
 skinparam linetype ortho
 skinparam ArrowThickness 1.2
-skinparam ranksep 65
-skinparam nodesep 50
+skinparam ranksep 48
+skinparam nodesep 36
 skinparam rectangle {
-  BorderColor #4A5568
-  FontColor #1F2937
+  BorderColor #2F4F7F
+  FontColor #111827
   RoundCorner 12
 }
 skinparam database {
   BorderColor #9A3412
-  FontColor #1F2937
+  FontColor #111827
 }
+skinparam folder {
+  BorderColor #7C5A2F
+  FontColor #111827
+  RoundCorner 12
+}
+skinparam defaultTextAlignment left
 
-rectangle "Browser UI\nindex.php, project.php, ..." as UI #E8F2FF
-rectangle "Client Logic\njs/dashboard.js\njs/kanban.js\njs/search-filter.js" as JS #EDF7FF
-rectangle "REST Endpoints\napi/*.php" as API #EAF9EA
-rectangle "Domain Logic\nincludes/*-functions.php" as SVC #F6F6F6
-database "MySQL Storage\nusers, projects,\nproject_members,\nproject_join_requests,\ntasks" as DB #FFE7D6
-rectangle "Shared Utilities\nincludes/*.php" as INC #FFF4E8
+rectangle "UI Pages\nindex.php, project.php, task.php\nlogin.php, register.php, profile.php" as PAGES #E9F2FF
+rectangle "Client Layer\njs/*.js and css/*.css" as ASSETS #E8FAFF
+rectangle "API Endpoints\nauth.php, projects.php, tasks.php\nmembers.php, join-requests.php" as API #EAF9EA
+rectangle "Core Includes\nincludes/session.php, functions.php\nconfig.php, db-connect.php" as CORE #F6F6F6
+database "Persistent Data\nusers, projects\nproject_members\nproject_join_requests\ntasks" as DB #FFE8D9
+folder "Schema Scripts\ndatabase/schema.sql\ndatabase/sample-data.sql" as DBSRC #F5F7FA
+folder "Attachment Storage\nuploads/attachments" as FILES #FFF5E8
 
-UI -[hidden]down- JS
-JS -[hidden]down- API
-API -[hidden]down- SVC
-SVC -[hidden]down- DB
-INC -[hidden]right- SVC
+PAGES -[hidden]down- ASSETS
+ASSETS -[hidden]down- API
+API -[hidden]down- CORE
+CORE -[hidden]down- DB
+DBSRC -[hidden]right- DB
+DB -[hidden]right- FILES
 
-UI --> JS : UI events
-JS --> API : fetch JSON
-API --> SVC : route + auth
-SVC --> DB : SQL query
-DB --> SVC : rows
-SVC --> API : service data
-API --> JS : JSON response
-JS --> UI : DOM update
-INC --> SVC : session helpers
+PAGES -down-> ASSETS : (1) UI events
+ASSETS -down-> API : (2) AJAX / Fetch
+API -down-> CORE : (3) auth + domain checks
+CORE -down-> DB : (4) SQL execution
+
+DB -up-> CORE : (5) rows / status
+CORE -up-> API : (6) validated payload
+API -up-> ASSETS : (7) JSON response
+ASSETS -up-> PAGES : (8) DOM refresh
+
+DBSRC ..> DB : (9) migrate / seed
+API --> FILES : (10) attachment metadata
+FILES --> API : (11) file URL / path
+
+legend bottom
+Vertical runtime lane:
+UI -> Client -> API -> Includes -> DB
+and response lane goes upward back to UI.
+end legend
 
 @enduml

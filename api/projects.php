@@ -5,10 +5,13 @@
  * 
  * Endpoints:
  * GET    /api/projects.php                 - List user's projects
+ * GET    /api/projects.php?archived=1      - List user's archived projects
  * GET    /api/projects.php?id={id}         - Get project details
  * GET    /api/projects.php?code={code}     - Find project by code
  * POST   /api/projects.php                 - Create new project
  * PUT    /api/projects.php?id={id}         - Update project
+ * PUT    /api/projects.php?id={id}&action=archive - Archive project (soft delete)
+ * PUT    /api/projects.php?id={id}&action=unarchive - Unarchive project
  * DELETE /api/projects.php?id={id}         - Delete project
  */
 
@@ -54,6 +57,12 @@ try {
  */
 function handleGet(int $userId): void
 {
+    // List archived projects
+    if (isset($_GET['archived'])) {
+        $result = projectGetUserArchivedProjects($userId);
+        jsonResponse($result);
+    }
+
     // Get single project by ID
     if (isset($_GET['id'])) {
         $projectId = (int) $_GET['id'];
@@ -102,6 +111,18 @@ function handlePut(int $userId): void
     }
 
     $projectId = (int) $_GET['id'];
+    $action = $_GET['action'] ?? '';
+
+    if ($action === 'archive') {
+        $result = projectArchive($projectId, $userId);
+        jsonResponse($result, $result['success'] ? 200 : 400);
+    }
+
+    if ($action === 'unarchive') {
+        $result = projectUnarchive($projectId, $userId);
+        jsonResponse($result, $result['success'] ? 200 : 400);
+    }
+
     $input = getJsonInput();
 
     $data = [];

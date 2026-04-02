@@ -71,6 +71,9 @@ require_once __DIR__ . '/includes/header.php';
                 <button class="btn btn-outline" data-modal-open="searchFilterModal">
                     Tìm kiếm & Lọc
                 </button>
+                <button class="btn btn-outline" id="viewArchivedTasksBtn" data-modal-open="archivedTasksModal">
+                    Task đã lưu trữ
+                </button>
                 <?php if ($isOwner): ?>
                     <a class="btn btn-outline" href="members.php?project_id=<?= $projectId ?>">
                         Quản lý thành viên
@@ -78,6 +81,9 @@ require_once __DIR__ . '/includes/header.php';
                     <a class="btn btn-outline" href="join-requests.php?project_id=<?= $projectId ?>">
                         Yêu cầu tham gia
                     </a>
+                    <button type="button" class="btn btn-outline" id="archiveProjectBtn">
+                        Lưu trữ dự án
+                    </button>
                 <?php endif; ?>
                 <button class="btn btn-primary" data-modal-open="createTaskModal">
                     Tạo task mới
@@ -211,6 +217,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-modal-close>Đóng</button>
             <button type="button" class="btn btn-outline" id="editTaskBtn" style="display: none;">Chỉnh sửa</button>
+            <button type="button" class="btn btn-outline" id="archiveTaskBtn" style="display: none;">Lưu trữ</button>
             <button type="button" class="btn btn-danger" id="deleteTaskBtn" style="display: none;">Xóa task</button>
         </div>
     </div>
@@ -346,11 +353,30 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<!-- Archived Tasks Modal -->
+<div id="archivedTasksModal" class="modal-backdrop">
+    <div class="modal modal-large">
+        <div class="modal-header">
+            <h3 class="modal-title">Task đã lưu trữ</h3>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="archivedTasksContainer">
+                <p class="text-muted">Nhấn "Task đã lưu trữ" để tải danh sách.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-modal-close>Đóng</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // Pass project data to JavaScript
 const PROJECT_ID = <?= $projectId ?>;
 const IS_OWNER = <?= $isOwner ? 'true' : 'false' ?>;
 const CURRENT_USER_ID = <?= $userId ?>;
+const PROJECT_NAME = <?= json_encode($project['project_name'], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 
 <script type="module" src="<?= asset('js/kanban.js') ?>"></script>
