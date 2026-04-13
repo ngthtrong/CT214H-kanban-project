@@ -46,13 +46,9 @@ require_once __DIR__ . '/includes/header.php';
 <?php if ($isOwner): ?>
 <div class="card" style="margin-bottom: 1rem;">
     <div class="card-body">
-        <form id="addMemberForm" style="display: flex; gap: .75rem; align-items: end;">
-            <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                <label for="identifier">Username hoặc Email</label>
-                <input id="identifier" name="identifier" class="form-control" placeholder="nhap username/email" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Thêm thành viên</button>
-        </form>
+        <p class="text-muted" style="margin: 0;">
+            Chức năng thêm trực tiếp thành viên đã tắt. Vui lòng duyệt thành viên qua mục Yêu cầu tham gia.
+        </p>
     </div>
 </div>
 <?php endif; ?>
@@ -150,35 +146,6 @@ require_once __DIR__ . '/includes/header.php';
 
         showNotification(result.message || 'Đã xóa thành viên', 'success');
         await loadMembers();
-    }
-
-    if (IS_OWNER) {
-        const addMemberForm = document.getElementById('addMemberForm');
-        addMemberForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const identifier = document.getElementById('identifier').value.trim();
-            if (!identifier) {
-                showNotification('Vui lòng nhập username hoặc email', 'warning');
-                return;
-            }
-
-            const response = await fetch('api/members.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ project_id: PROJECT_ID, identifier })
-            });
-            const result = await response.json();
-
-            if (!result.success) {
-                showNotification(result.error || 'Không thể thêm thành viên', 'error');
-                return;
-            }
-
-            showNotification(result.message || 'Đã thêm thành viên', 'success');
-            addMemberForm.reset();
-            await loadMembers();
-        });
     }
 
     if (!IS_OWNER) {

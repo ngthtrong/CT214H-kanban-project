@@ -346,9 +346,12 @@ function _projectDeleteAttachments(int $projectId): void
     );
 
     foreach ($tasks as $task) {
-        $filePath = ATTACHMENT_PATH . $task['attachment_path'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        $attachmentFiles = taskParseAttachmentPaths($task['attachment_path'] ?? null);
+        foreach ($attachmentFiles as $attachmentFile) {
+            $filePath = ATTACHMENT_PATH . $attachmentFile;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
     }
 }

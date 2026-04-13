@@ -32,21 +32,50 @@ async function requestJson(url, options = {}, fallbackError = 'Có lỗi xảy r
     return parseJsonResponse(response, fallbackError);
 }
 
-function normalizeTaskPayload(formData, projectId = null) {
+function normalizeTaskPayload(formData, projectId = null, options = {}) {
+    const { includeAssignedTo = true } = options;
+
     const payload = {
         task_title: formData.get('task_title') || '',
         description: formData.get('description') || '',
         priority: formData.get('priority') || 'medium',
         column_status: formData.get('column_status') || 'todo',
-        assigned_to: formData.get('assigned_to') || null,
         due_date: formData.get('due_date') || null
     };
+
+    if (includeAssignedTo) {
+        payload.assigned_to = formData.get('assigned_to') || null;
+    }
 
     if (projectId !== null) {
         payload.project_id = projectId;
     }
 
     return payload;
+}
+
+function normalizeAttachmentFiles(attachmentPath) {
+    if (!attachmentPath) {
+        return [];
+    }
+
+    return String(attachmentPath)
+        .split(/[\n,;|]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => item.split('/').pop().split('\\').pop())
+        .filter(Boolean);
+}
+
+function getTaskAttachmentFiles(task) {
+    if (Array.isArray(task?.attachment_files)) {
+        return task.attachment_files
+            .map((item) => String(item || '').trim())
+            .filter(Boolean)
+            .map((item) => item.split('/').pop().split('\\').pop());
+    }
+
+    return normalizeAttachmentFiles(task?.attachment_path || null);
 }
 
 function renderTaskDetail(task, helpers) {
@@ -61,6 +90,8 @@ function renderTaskDetail(task, helpers) {
         in_progress: 'In Progress',
         done: 'Done'
     };
+
+    const attachmentFiles = getTaskAttachmentFiles(task);
 
     return `
         <div class="task-detail-content">
@@ -88,13 +119,22 @@ function renderTaskDetail(task, helpers) {
                 </div>
             </div>
 
-            ${task.attachment_path ? `
+            ${attachmentFiles.length > 0 ? `
                 <div class="task-detail-section">
                     <h4>File đính kèm</h4>
-                    <a href="api/upload.php?file=${encodeURIComponent(task.attachment_path)}"
-                       class="btn btn-outline btn-sm" download>
-                        Tải xuống file
-                    </a>
+                    <ul class="task-attachment-list">
+                        ${attachmentFiles.map((filename) => `
+                            <li class="task-attachment-item">${helpers.escapeHtml(filename)}</li>
+                        `).join('')}
+                    </ul>
+                    <div class="task-attachment-actions">
+                        ${attachmentFiles.map((filename) => `
+                            <a href="api/upload.php?file=${encodeURIComponent(filename)}"
+                               class="btn btn-outline btn-sm" download>
+                                Tải xuống: ${helpers.escapeHtml(filename)}
+                            </a>
+                        `).join('')}
+                    </div>
                 </div>
             ` : ''}
 
@@ -131,7 +171,9 @@ export function createTaskModalController(config) {
         deleteButton: document.getElementById('deleteTaskBtn'),
         attachmentUploadButton: document.getElementById('uploadAttachmentBtn'),
         attachmentUploadInput: document.getElementById('edit_attachment_upload'),
-        attachmentContainer: document.getElementById('edit_attachment_container')
+        attachmentContainer: document.getElementById('edit_attachment_container'),
+        createDueDateInput: document.getElementById('due_date'),
+        editDueDateInput: document.getElementById('edit_due_date')
     };
 
     const safeNotify = (message, type = 'info') => {
@@ -146,31 +188,47 @@ export function createTaskModalController(config) {
         }
     };
 
-    const setAttachmentPreview = (filename, taskId) => {
+    const setAttachmentPreview = (filenames, taskId) => {
         if (!elements.attachmentContainer) {
             return;
         }
 
-        if (!filename) {
+        if (!Array.isArray(filenames) || filenames.length === 0) {
             elements.attachmentContainer.innerHTML = '';
             return;
         }
 
         elements.attachmentContainer.innerHTML = `
-            <div class="attachment-preview">
-                <a href="api/upload.php?file=${encodeURIComponent(filename)}" download>
-                    ${escapeHtml(filename)}
-                </a>
-                <button type="button" class="btn-remove" data-remove-attachment="${taskId}">Xóa</button>
+            <div class="attachment-preview attachment-preview-list">
+                <div class="attachment-preview-meta">Đã đính kèm ${filenames.length}/5 file</div>
+                ${filenames.map((filename) => `
+                    <div class="attachment-preview-item">
+                        <a class="attachment-preview-link" href="api/upload.php?file=${encodeURIComponent(filename)}" download>
+                            ${escapeHtml(filename)}
+                        </a>
+                        <div class="attachment-preview-actions">
+                            <button
+                                type="button"
+                                class="btn-remove"
+                                data-remove-attachment="${taskId}"
+                                data-remove-filename="${encodeURIComponent(filename)}">
+                                Xóa file này
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `;
 
-        const removeButton = elements.attachmentContainer.querySelector('[data-remove-attachment]');
-        if (removeButton) {
-            removeButton.addEventListener('click', () => {
-                removeAttachment(taskId);
+        elements.attachmentContainer
+            .querySelectorAll('[data-remove-attachment][data-remove-filename]')
+            .forEach((removeButton) => {
+                removeButton.addEventListener('click', () => {
+                    const encodedFilename = removeButton.dataset.removeFilename || '';
+                    const filename = encodedFilename ? decodeURIComponent(encodedFilename) : '';
+                    removeAttachment(taskId, filename);
+                });
             });
-        }
     };
 
     const populateEditForm = (task) => {
@@ -180,7 +238,6 @@ export function createTaskModalController(config) {
             ['edit_description', task.description || ''],
             ['edit_priority', task.priority || 'medium'],
             ['edit_column_status', task.column_status || 'todo'],
-            ['edit_assigned_to', task.assigned_to || ''],
             ['edit_due_date', task.due_date || '']
         ];
 
@@ -191,7 +248,37 @@ export function createTaskModalController(config) {
             }
         });
 
-        setAttachmentPreview(task.attachment_path || null, task.task_id);
+        const assigneeField = document.getElementById('edit_assigned_to');
+        const assigneeGroup = assigneeField ? assigneeField.closest('.form-group') : null;
+
+        if (assigneeField) {
+            assigneeField.value = task.assigned_to || '';
+            assigneeField.disabled = !task.is_owner;
+        }
+
+        if (elements.editForm) {
+            elements.editForm.dataset.canEditAssignee = task.is_owner ? '1' : '0';
+        }
+
+        if (assigneeGroup) {
+            assigneeGroup.style.display = task.is_owner ? '' : 'none';
+        }
+
+        if (elements.editDueDateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            const currentDueDate = task.due_date || '';
+            elements.editDueDateInput.min = currentDueDate && currentDueDate < today
+                ? currentDueDate
+                : today;
+        }
+
+        const attachmentFiles = getTaskAttachmentFiles(task);
+
+        if (elements.editForm) {
+            elements.editForm.dataset.attachmentCount = String(attachmentFiles.length);
+        }
+
+        setAttachmentPreview(attachmentFiles, task.task_id);
     };
 
     const handleCreateTask = async (event) => {
@@ -201,7 +288,9 @@ export function createTaskModalController(config) {
         }
 
         try {
-            const payload = normalizeTaskPayload(new FormData(elements.createForm), projectId);
+            const payload = normalizeTaskPayload(new FormData(elements.createForm), projectId, {
+                includeAssignedTo: true
+            });
             await requestJson('api/tasks.php', createJsonRequestOptions('POST', payload), 'Không thể tạo task');
 
             safeNotify('Tạo task thành công', 'success');
@@ -227,7 +316,10 @@ export function createTaskModalController(config) {
         }
 
         try {
-            const payload = normalizeTaskPayload(formData);
+            const canEditAssignee = elements.editForm.dataset.canEditAssignee === '1';
+            const payload = normalizeTaskPayload(formData, null, {
+                includeAssignedTo: canEditAssignee
+            });
             await requestJson(
                 `api/tasks.php?id=${taskId}`,
                 createJsonRequestOptions('PUT', payload),
@@ -243,8 +335,8 @@ export function createTaskModalController(config) {
     };
 
     const handleFileUpload = async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) {
+        const selectedFiles = Array.from(event.target.files || []);
+        if (selectedFiles.length === 0) {
             return;
         }
 
@@ -254,8 +346,19 @@ export function createTaskModalController(config) {
             return;
         }
 
+        const currentCount = Number.parseInt(elements.editForm?.dataset.attachmentCount || '0', 10) || 0;
+        const availableSlots = Math.max(0, 5 - currentCount);
+
+        if (availableSlots <= 0) {
+            safeNotify('Task đã đạt tối đa 5 file đính kèm', 'warning');
+            event.target.value = '';
+            return;
+        }
+
         const formData = new FormData();
-        formData.append('attachment', file);
+        selectedFiles.slice(0, availableSlots).forEach((file) => {
+            formData.append('attachments[]', file);
+        });
 
         try {
             const response = await fetch(`api/upload.php?task_id=${taskId}`, {
@@ -264,29 +367,42 @@ export function createTaskModalController(config) {
             });
             const result = await parseJsonResponse(response, 'Không thể upload file');
 
-            safeNotify('Upload file thành công', 'success');
-            setAttachmentPreview(result.data.filename, taskId);
+            if (selectedFiles.length > availableSlots) {
+                safeNotify(`Chỉ upload ${availableSlots} file do giới hạn tối đa 5 file/task`, 'warning');
+            }
+
+            safeNotify(result.message || 'Upload file thành công', 'success');
             event.target.value = '';
+
+            const taskResult = await requestJson(`api/tasks.php?id=${taskId}`, {}, 'Không thể tải task sau khi upload');
+            populateEditForm(taskResult.data);
             await refreshTasks();
         } catch (error) {
             safeNotify(`Lỗi: ${error.message}`, 'error');
         }
     };
 
-    const removeAttachment = async (taskId) => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa file đính kèm?')) {
+    const removeAttachment = async (taskId, filename) => {
+        if (!filename) {
+            safeNotify('Không xác định được file cần xóa', 'error');
+            return;
+        }
+
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa file ${filename}?`)) {
             return;
         }
 
         try {
             await requestJson(
-                `api/upload.php?task_id=${taskId}`,
+                `api/upload.php?task_id=${taskId}&file=${encodeURIComponent(filename)}`,
                 { method: 'DELETE' },
                 'Không thể xóa file đính kèm'
             );
 
             safeNotify('Đã xóa file đính kèm', 'success');
-            setAttachmentPreview(null, taskId);
+
+            const taskResult = await requestJson(`api/tasks.php?id=${taskId}`, {}, 'Không thể tải task sau khi xóa file');
+            populateEditForm(taskResult.data);
             await refreshTasks();
         } catch (error) {
             safeNotify(`Lỗi: ${error.message}`, 'error');
@@ -390,6 +506,30 @@ export function createTaskModalController(config) {
     };
 
     const init = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const assigneeField = document.getElementById('edit_assigned_to');
+        const assigneeGroup = assigneeField ? assigneeField.closest('.form-group') : null;
+
+        if (elements.createDueDateInput) {
+            elements.createDueDateInput.min = today;
+        }
+
+        if (elements.editDueDateInput) {
+            elements.editDueDateInput.min = today;
+        }
+
+        if (elements.editForm) {
+            elements.editForm.dataset.canEditAssignee = '0';
+        }
+
+        if (assigneeField) {
+            assigneeField.disabled = true;
+        }
+
+        if (assigneeGroup) {
+            assigneeGroup.style.display = 'none';
+        }
+
         if (elements.createForm) {
             elements.createForm.addEventListener('submit', handleCreateTask);
         }

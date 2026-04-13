@@ -24,6 +24,7 @@ if (!$result['success']) {
 }
 
 $task = $result['data'];
+$attachmentFiles = taskParseAttachmentPaths($task['attachment_path'] ?? null);
 $pageTitle = 'Task: ' . ($task['task_title'] ?? 'Chi tiết');
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -62,14 +63,21 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <?php if (!empty($task['attachment_path'])): ?>
+        <?php if (!empty($attachmentFiles)): ?>
             <div class="form-group">
                 <label>File đính kèm</label>
-                <p>
-                    <a class="btn btn-outline btn-sm" href="api/upload.php?file=<?php echo urlencode($task['attachment_path']); ?>" download>
-                        Tải xuống file
-                    </a>
-                </p>
+                <ul style="margin-bottom: .5rem; padding-left: 1.25rem;">
+                    <?php foreach ($attachmentFiles as $attachmentFile): ?>
+                        <li><?php echo htmlspecialchars($attachmentFile); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <div style="display: flex; flex-wrap: wrap; gap: .5rem;">
+                    <?php foreach ($attachmentFiles as $attachmentFile): ?>
+                        <a class="btn btn-outline btn-sm" href="api/upload.php?file=<?php echo urlencode($attachmentFile); ?>" download>
+                            Tải xuống: <?php echo htmlspecialchars($attachmentFile); ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
         <?php endif; ?>
 
