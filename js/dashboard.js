@@ -5,8 +5,22 @@
 
 'use strict';
 
+const PROJECTS_PER_PAGE = 9;
+
+const dashboardState = {
+    projects: [],
+    filteredProjects: [],
+    currentPage: 1,
+    filters: {
+        search: '',
+        role: '',
+        sort: 'updated_desc'
+    }
+};
+
 // Load projects on page load
 document.addEventListener('DOMContentLoaded', function() {
+    initProjectSearchFilterControls();
     loadProjects();
     initCreateProjectForm();
     initJoinProjectForm();
@@ -27,47 +41,8 @@ async function loadProjects() {
             throw new Error(result.error);
         }
         
-        const projects = result.data;
-        
-        if (projects.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon empty-state-icon-text">Dự án</div>
-                    <h3>Chưa có dự án nào</h3>
-                    <p>Tạo dự án mới hoặc tham gia dự án có sẵn để bắt đầu</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = `
-            <div class="project-grid">
-                ${projects.map(project => renderProjectCard(project)).join('')}
-            </div>
-        `;
-        
-        // Add click handlers
-        document.querySelectorAll('.project-card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                if (!e.target.closest('.btn-copy') && !e.target.closest('.project-action-btn')) {
-                    const projectId = this.dataset.projectId;
-                    window.location.href = `project.php?id=${projectId}`;
-                }
-            });
-        });
-
-        document.querySelectorAll('.project-archive-btn').forEach(button => {
-            button.addEventListener('click', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const projectId = this.dataset.projectId;
-                const projectName = this.dataset.projectName
-                    ? decodeURIComponent(this.dataset.projectName)
-                    : 'du an nay';
-                await archiveProject(projectId, projectName);
-            });
-        });
+        dashboardState.projects = Array.isArray(result.data) ? result.data : [];
+        applyProjectFiltersAndRender();
         
     } catch (error) {
         console.error('Load projects failed:', error);
@@ -77,6 +52,216 @@ async function loadProjects() {
             </div>
         `;
     }
+}
+
+function getProjectFilterDom() {
+    return {
+        searchInput: document.getElementById('projectSearchInput'),
+        roleFilter: document.getElementById('projectRoleFilter'),
+        sortSelect: document.getElementById('projectSortSelect'),
+        resetButton: document.getElementById('projectFilterResetBtn')
+    };
+}
+
+function initProjectSearchFilterControls() {
+    const controls = getProjectFilterDom();
+
+    if (controls.searchInput) {
+        const debouncedApply = debounce(() => {
+            dashboardState.currentPage = 1;
+            dashboardState.filters.search = controls.searchInput.value.trim();
+            applyProjectFiltersAndRender();
+        }, 220);
+
+        controls.searchInput.addEventListener('input', debouncedApply);
+    }
+
+    if (controls.roleFilter) {
+        controls.roleFilter.addEventListener('change', () => {
+            dashboardState.currentPage = 1;
+            dashboardState.filters.role = controls.roleFilter.value || '';
+            applyProjectFiltersAndRender();
+        });
+    }
+
+    if (controls.sortSelect) {
+        controls.sortSelect.addEventListener('change', () => {
+            dashboardState.currentPage = 1;
+            dashboardState.filters.sort = controls.sortSelect.value || 'updated_desc';
+            applyProjectFiltersAndRender();
+        });
+    }
+
+    if (controls.resetButton) {
+        controls.resetButton.addEventListener('click', () => {
+            if (controls.searchInput) {
+                controls.searchInput.value = '';
+            }
+            if (controls.roleFilter) {
+                controls.roleFilter.value = '';
+            }
+            if (controls.sortSelect) {
+                controls.sortSelect.value = 'updated_desc';
+            }
+
+            dashboardState.currentPage = 1;
+            dashboardState.filters = {
+                search: '',
+                role: '',
+                sort: 'updated_desc'
+            };
+            applyProjectFiltersAndRender();
+        });
+    }
+}
+
+function applyProjectFiltersAndRender() {
+    const { search, role, sort } = dashboardState.filters;
+    let projects = [...dashboardState.projects];
+
+    if (search) {
+        const keyword = search.toLowerCase();
+        projects = projects.filter((project) => {
+            const searchable = [
+                project.project_name,
+                project.description,
+                project.project_code,
+                project.owner_name
+            ]
+                .map((value) => String(value || '').toLowerCase())
+                .join(' ');
+            return searchable.includes(keyword);
+        });
+    }
+
+    if (role) {
+        projects = projects.filter((project) => String(project.user_role) === role);
+    }
+
+    const sorters = {
+        updated_desc: (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        updated_asc: (a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+        name_asc: (a, b) => String(a.project_name || '').localeCompare(String(b.project_name || ''), 'vi', { sensitivity: 'base' }),
+        name_desc: (a, b) => String(b.project_name || '').localeCompare(String(a.project_name || ''), 'vi', { sensitivity: 'base' }),
+        members_desc: (a, b) => Number(b.member_count || 0) - Number(a.member_count || 0),
+        tasks_desc: (a, b) => Number(b.task_count || 0) - Number(a.task_count || 0)
+    };
+
+    const sorter = sorters[sort] || sorters.updated_desc;
+    projects.sort(sorter);
+
+    dashboardState.filteredProjects = projects;
+    renderProjectsPage();
+}
+
+function renderProjectsPage() {
+    const container = document.getElementById('projectsContainer');
+    if (!container) {
+        return;
+    }
+
+    const projects = dashboardState.filteredProjects;
+    const totalProjects = projects.length;
+
+    if (totalProjects === 0) {
+        const hasFilter = Boolean(
+            dashboardState.filters.search ||
+            dashboardState.filters.role ||
+            dashboardState.filters.sort !== 'updated_desc'
+        );
+
+        container.innerHTML = hasFilter
+            ? `
+                <div class="empty-state">
+                    <div class="empty-state-icon empty-state-icon-text">Lọc</div>
+                    <h3>Không tìm thấy dự án phù hợp</h3>
+                    <p>Thử thay đổi từ khóa, bộ lọc hoặc cách sắp xếp</p>
+                </div>
+            `
+            : `
+                <div class="empty-state">
+                    <div class="empty-state-icon empty-state-icon-text">Dự án</div>
+                    <h3>Chưa có dự án nào</h3>
+                    <p>Tạo dự án mới hoặc tham gia dự án có sẵn để bắt đầu</p>
+                </div>
+            `;
+
+        renderProjectPagination(0, 1);
+        return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
+    dashboardState.currentPage = Math.min(Math.max(1, dashboardState.currentPage), totalPages);
+
+    const start = (dashboardState.currentPage - 1) * PROJECTS_PER_PAGE;
+    const pageProjects = projects.slice(start, start + PROJECTS_PER_PAGE);
+
+    container.innerHTML = `
+        <div class="project-grid">
+            ${pageProjects.map(project => renderProjectCard(project)).join('')}
+        </div>
+    `;
+
+    bindProjectCardEvents();
+    renderProjectPagination(totalProjects, totalPages);
+}
+
+function bindProjectCardEvents() {
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-copy') && !e.target.closest('.project-action-btn')) {
+                const projectId = this.dataset.projectId;
+                window.location.href = `project.php?id=${projectId}`;
+            }
+        });
+    });
+
+    document.querySelectorAll('.project-archive-btn').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const projectId = this.dataset.projectId;
+            const projectName = this.dataset.projectName
+                ? decodeURIComponent(this.dataset.projectName)
+                : 'du an nay';
+            await archiveProject(projectId, projectName);
+        });
+    });
+}
+
+function renderProjectPagination(totalItems, totalPages) {
+    const pagination = document.getElementById('projectsPagination');
+    if (!pagination) {
+        return;
+    }
+
+    if (totalItems <= PROJECTS_PER_PAGE) {
+        pagination.innerHTML = '';
+        pagination.style.display = 'none';
+        return;
+    }
+
+    pagination.style.display = 'flex';
+    pagination.innerHTML = `
+        <button type="button" class="pagination-btn" data-page-action="prev" ${dashboardState.currentPage <= 1 ? 'disabled' : ''}>
+            Trước
+        </button>
+        <span class="pagination-info">Trang ${dashboardState.currentPage}/${totalPages} (${totalItems} dự án)</span>
+        <button type="button" class="pagination-btn" data-page-action="next" ${dashboardState.currentPage >= totalPages ? 'disabled' : ''}>
+            Sau
+        </button>
+    `;
+
+    pagination.querySelector('[data-page-action="prev"]')?.addEventListener('click', () => {
+        dashboardState.currentPage = Math.max(1, dashboardState.currentPage - 1);
+        renderProjectsPage();
+    });
+
+    pagination.querySelector('[data-page-action="next"]')?.addEventListener('click', () => {
+        dashboardState.currentPage = Math.min(totalPages, dashboardState.currentPage + 1);
+        renderProjectsPage();
+    });
 }
 
 /**

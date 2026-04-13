@@ -35,6 +35,7 @@ export function populateMemberSelects(members, selectIds = []) {
 
         if (selectId === 'filter_assigned') {
             select.appendChild(new Option('Tất cả', ''));
+            select.appendChild(new Option('Tôi', 'me'));
             select.appendChild(new Option('Chưa gán', 'unassigned'));
         } else {
             select.appendChild(new Option('Chưa gán', ''));

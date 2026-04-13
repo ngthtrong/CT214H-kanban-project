@@ -7,7 +7,9 @@ function getFilterElements() {
         search: document.getElementById('search_text'),
         status: document.getElementById('filter_status'),
         priority: document.getElementById('filter_priority'),
-        assigned: document.getElementById('filter_assigned')
+        assigned: document.getElementById('filter_assigned'),
+        sortBy: document.getElementById('filter_sort_by'),
+        sortDir: document.getElementById('filter_sort_dir')
     };
 }
 
@@ -18,7 +20,9 @@ export function collectFiltersFromDom() {
         search: elements.search?.value.trim() || '',
         status: elements.status?.value || '',
         priority: elements.priority?.value || '',
-        assigned_to: elements.assigned?.value || ''
+        assigned_to: elements.assigned?.value || '',
+        sort_by: elements.sortBy?.value || 'priority',
+        sort_dir: elements.sortDir?.value || 'desc'
     };
 }
 
@@ -27,7 +31,8 @@ export function resetFiltersInDom() {
 
     Object.values(elements).forEach((element) => {
         if (element) {
-            element.value = '';
+            const defaultValue = element.dataset?.default;
+            element.value = typeof defaultValue === 'string' ? defaultValue : '';
         }
     });
 }

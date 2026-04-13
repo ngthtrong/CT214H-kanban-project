@@ -42,12 +42,49 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
+        <div class="search-filter-bar" id="projectSearchFilterBar">
+            <div class="search-filter-row">
+                <div class="search-box">
+                    <label for="projectSearchInput" class="form-hint">Tìm kiếm dự án</label>
+                    <input
+                        type="text"
+                        id="projectSearchInput"
+                        class="form-control"
+                        placeholder="Nhập tên, mô tả hoặc mã dự án...">
+                </div>
+                <div class="filter-select">
+                    <label for="projectRoleFilter" class="form-hint">Vai trò</label>
+                    <select id="projectRoleFilter" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="owner">Chủ dự án</option>
+                        <option value="member">Thành viên</option>
+                    </select>
+                </div>
+                <div class="filter-select">
+                    <label for="projectSortSelect" class="form-hint">Sắp xếp</label>
+                    <select id="projectSortSelect" class="form-control">
+                        <option value="updated_desc">Mới cập nhật</option>
+                        <option value="updated_asc">Cũ cập nhật</option>
+                        <option value="name_asc">Tên A-Z</option>
+                        <option value="name_desc">Tên Z-A</option>
+                        <option value="members_desc">Nhiều thành viên</option>
+                        <option value="tasks_desc">Nhiều công việc</option>
+                    </select>
+                </div>
+                <div class="filter-select" style="display:flex; align-items:flex-end;">
+                    <button type="button" class="btn btn-secondary" id="projectFilterResetBtn">Xóa bộ lọc</button>
+                </div>
+            </div>
+        </div>
+
         <div id="projectsContainer">
             <div style="text-align: center; padding: 3rem;">
                 <div class="spinner"></div>
                 <p>Đang tải dự án...</p>
             </div>
         </div>
+
+        <div id="projectsPagination" class="pagination" style="display:none;"></div>
     </div>
 </div>
 

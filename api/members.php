@@ -5,7 +5,6 @@
  * 
  * Endpoints:
  * GET    /api/members.php?project_id={id}                    - List project members
- * POST   /api/members.php                                    - Add member by identifier
  * DELETE /api/members.php?project_id={id}&user_id={userId}   - Remove member
  * POST   /api/members.php?action=leave                       - Leave project
  */
@@ -60,16 +59,10 @@ function handlePost(int $userId): void
 
     switch ($action) {
         case 'add':
-            // Add member to project
-            $projectId = (int) ($input['project_id'] ?? 0);
-            $identifier = trim($input['identifier'] ?? '');
-
-            if (!$projectId || !$identifier) {
-                jsonResponse(['success' => false, 'error' => 'Missing required fields'], 400);
-            }
-
-            $result = memberAddMember($projectId, $userId, $identifier);
-            jsonResponse($result, $result['success'] ? 200 : 400);
+            jsonResponse([
+                'success' => false,
+                'error' => 'Chuc nang them thanh vien truc tiep da duoc tat. Vui long su dung luong yeu cau tham gia du an.'
+            ], 403);
             break;
 
         case 'leave':

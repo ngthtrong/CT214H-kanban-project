@@ -8,8 +8,8 @@
  */
 function taskCreate(int $projectId, int $userId, array $data): array
 {
-    if (!taskIsMember($projectId, $userId)) {
-        return ['success' => false, 'error' => 'Ban khong co quyen tao task trong du an nay'];
+    if (!taskIsOwner($projectId, $userId)) {
+        return ['success' => false, 'error' => 'Chi chu du an moi co the tao task'];
     }
 
     $title = trim($data['task_title'] ?? '');
@@ -38,10 +38,11 @@ function taskCreate(int $projectId, int $userId, array $data): array
         }
     }
 
-    $dueDate = null;
-    if (!empty($data['due_date'])) {
-        $dueDate = date('Y-m-d', strtotime($data['due_date']));
+    $dueDateResult = _taskNormalizeDueDate($data['due_date'] ?? null);
+    if (!$dueDateResult['success']) {
+        return ['success' => false, 'error' => $dueDateResult['error']];
     }
+    $dueDate = $dueDateResult['value'];
 
     try {
         $taskId = dbInsert('tasks', [
@@ -94,6 +95,7 @@ function taskGet(int $taskId, int $userId): array
     $task['can_delete'] = $task['is_owner'];
     $task['can_archive'] = $task['is_owner'];
     $task['assignee_name'] = $task['assigned_name'];
+    $task['attachment_files'] = taskParseAttachmentPaths($task['attachment_path'] ?? null);
 
     return ['success' => true, 'data' => $task];
 }
@@ -118,6 +120,7 @@ function taskGetProjectTasks(int $projectId, int $userId): array
 
     foreach ($tasks as &$task) {
         $task['assignee_name'] = $task['assigned_name'];
+        $task['attachment_files'] = taskParseAttachmentPaths($task['attachment_path'] ?? null);
     }
 
     return ['success' => true, 'data' => $tasks];
@@ -143,6 +146,7 @@ function taskGetArchivedProjectTasks(int $projectId, int $userId): array
 
     foreach ($tasks as &$task) {
         $task['assignee_name'] = $task['assigned_name'];
+        $task['attachment_files'] = taskParseAttachmentPaths($task['attachment_path'] ?? null);
     }
 
     return ['success' => true, 'data' => $tasks];
@@ -197,7 +201,11 @@ function taskUpdate(int $taskId, int $userId, array $data): array
     }
 
     if (array_key_exists('due_date', $data)) {
-        $updateData['due_date'] = $data['due_date'] ? date('Y-m-d', strtotime($data['due_date'])) : null;
+        $dueDateResult = _taskNormalizeDueDate($data['due_date'], $task['due_date'] ?? null);
+        if (!$dueDateResult['success']) {
+            return ['success' => false, 'error' => $dueDateResult['error']];
+        }
+        $updateData['due_date'] = $dueDateResult['value'];
     }
 
     if (isset($data['assigned_to']) && $isOwner) {
@@ -274,9 +282,12 @@ function taskDelete(int $taskId, int $userId): array
 
     try {
         if (!empty($task['attachment_path'])) {
-            $filePath = ATTACHMENT_PATH . $task['attachment_path'];
-            if (file_exists($filePath)) {
-                unlink($filePath);
+            $attachmentFiles = taskParseAttachmentPaths($task['attachment_path']);
+            foreach ($attachmentFiles as $attachmentFile) {
+                $filePath = ATTACHMENT_PATH . $attachmentFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
             }
         }
 
@@ -397,19 +408,54 @@ function taskUpdateAttachment(int $taskId, int $userId, ?string $attachmentPath)
     }
 
     try {
-        if (!empty($task['attachment_path']) && $attachmentPath !== null) {
-            $oldFilePath = ATTACHMENT_PATH . $task['attachment_path'];
-            if (file_exists($oldFilePath)) {
-                unlink($oldFilePath);
-            }
-        }
+        $normalized = $attachmentPath === null
+            ? null
+            : taskBuildAttachmentPathValue(taskParseAttachmentPaths($attachmentPath));
 
-        dbUpdate('tasks', ['attachment_path' => $attachmentPath], 'task_id = ?', [$taskId]);
+        dbUpdate('tasks', ['attachment_path' => $normalized], 'task_id = ?', [$taskId]);
         return ['success' => true, 'message' => 'Cap nhat file dinh kem thanh cong'];
     } catch (Exception $e) {
         error_log('Update attachment failed: ' . $e->getMessage());
         return ['success' => false, 'error' => 'Khong the cap nhat file dinh kem'];
     }
+}
+
+function taskParseAttachmentPaths(?string $attachmentPath): array
+{
+    if ($attachmentPath === null) {
+        return [];
+    }
+
+    $parts = preg_split('/[\n,;|]+/', (string) $attachmentPath) ?: [];
+    $files = [];
+
+    foreach ($parts as $part) {
+        $normalized = trim(basename((string) $part));
+        if ($normalized === '') {
+            continue;
+        }
+        $files[$normalized] = $normalized;
+    }
+
+    return array_values($files);
+}
+
+function taskBuildAttachmentPathValue(array $attachmentPaths): ?string
+{
+    $normalized = [];
+    foreach ($attachmentPaths as $path) {
+        $file = trim(basename((string) $path));
+        if ($file === '') {
+            continue;
+        }
+        $normalized[$file] = $file;
+    }
+
+    if (empty($normalized)) {
+        return null;
+    }
+
+    return implode('|', array_values($normalized));
 }
 
 function _taskGetBasic(int $taskId): ?array
@@ -421,6 +467,27 @@ function _taskGetBasic(int $taskId): ?array
          WHERE t.task_id = ? AND t.is_archived = 0 AND p.is_archived = 0',
         [$taskId]
     );
+}
+
+function _taskNormalizeDueDate($rawDueDate, ?string $existingDueDate = null): array
+{
+    if ($rawDueDate === null || $rawDueDate === '') {
+        return ['success' => true, 'value' => null];
+    }
+
+    $timestamp = strtotime((string) $rawDueDate);
+    if ($timestamp === false) {
+        return ['success' => false, 'error' => 'Han hoan thanh khong hop le'];
+    }
+
+    $normalizedDate = date('Y-m-d', $timestamp);
+    $today = date('Y-m-d');
+
+    if ($normalizedDate < $today && $normalizedDate !== $existingDueDate) {
+        return ['success' => false, 'error' => 'Han hoan thanh chi duoc tu hom nay tro di'];
+    }
+
+    return ['success' => true, 'value' => $normalizedDate];
 }
 
 function taskIsMember(int $projectId, int $userId): bool
@@ -478,6 +545,9 @@ function searchProjectTasks(int $projectId, int $userId, array $filters = []): a
 
         if ($assignedFilter === 'unassigned') {
             $conditions[] = 't.assigned_to IS NULL';
+        } elseif ($assignedFilter === 'me') {
+            $conditions[] = 't.assigned_to = ?';
+            $params[] = $userId;
         } elseif ($assignedFilter !== '' && $assignedFilter !== null && is_numeric($assignedFilter)) {
             $conditions[] = 't.assigned_to = ?';
             $params[] = (int) $assignedFilter;

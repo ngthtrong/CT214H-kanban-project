@@ -2,18 +2,24 @@
  * Kanban board orchestrator module.
  */
 
-import { bindColumnDragDrop, resetDragDropState } from './drag-drop.js';
-import { createTaskModalController } from './task-modal.js';
+import { bindColumnDragDrop, resetDragDropState } from './drag-drop.js?v=20260413_3';
+import { createTaskModalController } from './task-modal.js?v=20260413_3';
 import { fetchProjectMembers, populateMemberSelects } from './member-modal.js';
-import { bindSearchFilterEvents } from './search-filter.js';
+import { bindSearchFilterEvents } from './search-filter.js?v=20260413_1';
 
 const BOARD_STATUSES = ['todo', 'in_progress', 'done'];
 const MEMBER_SELECT_IDS = ['assigned_to', 'edit_assigned_to', 'filter_assigned'];
+const TASKS_PER_COLUMN_PAGE = 5;
 
 const state = {
     tasks: [],
     members: [],
-    filters: {}
+    filters: {},
+    columnPages: {
+        todo: 1,
+        in_progress: 1,
+        done: 1
+    }
 };
 
 let taskModalController = null;
@@ -118,8 +124,17 @@ function renderTaskCard(task) {
         new Date(task.due_date) < new Date() &&
         task.column_status !== 'done';
 
+    const isAssignedToCurrentUser =
+        typeof CURRENT_USER_ID !== 'undefined' &&
+        task.assigned_to !== null &&
+        String(task.assigned_to) === String(CURRENT_USER_ID);
+
+    const cardClassName = isAssignedToCurrentUser
+        ? 'task-card task-card-assigned-to-me'
+        : 'task-card';
+
     return `
-        <div class="task-card"
+        <div class="${cardClassName}"
              draggable="true"
              data-task-id="${task.task_id}"
              data-status="${task.column_status}">
@@ -157,6 +172,136 @@ function renderTaskCard(task) {
     `;
 }
 
+function getFilterKey(filters = {}) {
+    return JSON.stringify({
+        search: filters.search || '',
+        status: filters.status || '',
+        priority: filters.priority || '',
+        assigned_to: filters.assigned_to || '',
+        sort_by: filters.sort_by || 'priority',
+        sort_dir: filters.sort_dir || 'desc'
+    });
+}
+
+function compareByPriority(a, b) {
+    const priorityRank = {
+        low: 1,
+        medium: 2,
+        high: 3
+    };
+
+    const aRank = priorityRank[a.priority] || 0;
+    const bRank = priorityRank[b.priority] || 0;
+    return aRank - bRank;
+}
+
+function compareByDueDate(a, b) {
+    const aHasDueDate = Boolean(a.due_date);
+    const bHasDueDate = Boolean(b.due_date);
+
+    if (!aHasDueDate && !bHasDueDate) {
+        return 0;
+    }
+    if (!aHasDueDate) {
+        return 1;
+    }
+    if (!bHasDueDate) {
+        return -1;
+    }
+
+    return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+}
+
+function compareByCreatedAt(a, b) {
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+}
+
+function compareByTitle(a, b) {
+    const aTitle = String(a.task_title || '');
+    const bTitle = String(b.task_title || '');
+    return aTitle.localeCompare(bTitle, 'vi', { sensitivity: 'base' });
+}
+
+function sortTasksByFilters(tasks, filters = {}) {
+    const sortBy = filters.sort_by || 'priority';
+    const sortDir = filters.sort_dir === 'asc' ? 'asc' : 'desc';
+
+    const comparators = {
+        priority: compareByPriority,
+        due_date: compareByDueDate,
+        created_at: compareByCreatedAt,
+        task_title: compareByTitle
+    };
+
+    const comparator = comparators[sortBy] || compareByPriority;
+
+    return [...tasks].sort((a, b) => {
+        const value = comparator(a, b);
+        if (value === 0) {
+            return compareByCreatedAt(a, b);
+        }
+
+        return sortDir === 'asc' ? value : -value;
+    });
+}
+
+function resetColumnPages() {
+    state.columnPages = {
+        todo: 1,
+        in_progress: 1,
+        done: 1
+    };
+}
+
+function renderColumnPagination(status, totalItems, totalPages) {
+    const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
+    if (!column) {
+        return;
+    }
+
+    let pagination = column.querySelector('.column-pagination');
+    if (!pagination) {
+        pagination = document.createElement('div');
+        pagination.className = 'column-pagination';
+        column.appendChild(pagination);
+    }
+
+    if (totalItems <= TASKS_PER_COLUMN_PAGE) {
+        pagination.innerHTML = '';
+        pagination.style.display = 'none';
+        return;
+    }
+
+    const currentPage = state.columnPages[status] || 1;
+    pagination.style.display = 'flex';
+    pagination.innerHTML = `
+        <button type="button" class="column-pagination-btn" data-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>
+            Trước
+        </button>
+        <span class="column-pagination-info">Trang ${currentPage}/${totalPages}</span>
+        <button type="button" class="column-pagination-btn" data-action="next" ${currentPage >= totalPages ? 'disabled' : ''}>
+            Sau
+        </button>
+    `;
+
+    const prevButton = pagination.querySelector('[data-action="prev"]');
+    const nextButton = pagination.querySelector('[data-action="next"]');
+
+    if (prevButton) {
+        prevButton.addEventListener('click', () => {
+            state.columnPages[status] = Math.max(1, currentPage - 1);
+            renderBoard();
+        });
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener('click', () => {
+            state.columnPages[status] = Math.min(totalPages, currentPage + 1);
+            renderBoard();
+        });
+    }
+}
+
 function renderBoard() {
     BOARD_STATUSES.forEach((status) => {
         const columnBody = document.getElementById(`column-${status}`);
@@ -165,17 +310,27 @@ function renderBoard() {
             return;
         }
 
-        const tasksInColumn = state.tasks.filter((task) => task.column_status === status);
+        const tasksInColumn = sortTasksByFilters(
+            state.tasks.filter((task) => task.column_status === status),
+            state.filters
+        );
         columnCount.textContent = String(tasksInColumn.length);
 
-        if (tasksInColumn.length === 0) {
+        const totalPages = Math.max(1, Math.ceil(tasksInColumn.length / TASKS_PER_COLUMN_PAGE));
+        const currentPage = Math.min(state.columnPages[status] || 1, totalPages);
+        state.columnPages[status] = currentPage;
+
+        const startIndex = (currentPage - 1) * TASKS_PER_COLUMN_PAGE;
+        const tasksOnPage = tasksInColumn.slice(startIndex, startIndex + TASKS_PER_COLUMN_PAGE);
+
+        if (tasksOnPage.length === 0) {
             columnBody.innerHTML = `
                 <div class="empty-column">
                     <p>Không có task nào</p>
                 </div>
             `;
         } else {
-            columnBody.innerHTML = tasksInColumn.map((task) => renderTaskCard(task)).join('');
+            columnBody.innerHTML = tasksOnPage.map((task) => renderTaskCard(task)).join('');
         }
 
         bindColumnDragDrop(columnBody, {
@@ -186,6 +341,8 @@ function renderBoard() {
             },
             onTaskDrop: handleTaskStatusDrop
         });
+
+        renderColumnPagination(status, tasksInColumn.length, totalPages);
     });
 }
 
@@ -237,10 +394,28 @@ async function loadTasks(filters = {}) {
             params.append('assigned_to', filters.assigned_to);
         }
 
+        const hasServerFilters = Boolean(
+            filters.search ||
+            filters.status ||
+            filters.priority ||
+            (filters.assigned_to !== undefined && filters.assigned_to !== '')
+        );
+
+        if (hasServerFilters) {
+            params.append('per_page', '500');
+        }
+
         const result = await requestJson(`api/tasks.php?${params.toString()}`, {}, 'Không thể tải danh sách task');
+
+        const previousFilterKey = getFilterKey(state.filters);
+        const nextFilterKey = getFilterKey(filters);
 
         state.tasks = normalizeTaskList(result.data);
         state.filters = filters;
+
+        if (previousFilterKey !== nextFilterKey) {
+            resetColumnPages();
+        }
 
         renderBoard();
 
@@ -484,11 +659,9 @@ function bindFilters() {
     bindSearchFilterEvents({
         onApply: async (filters) => {
             await loadTasks(filters);
-            safeCloseModal('searchFilterModal');
         },
         onClear: async () => {
             await loadTasks({});
-            safeCloseModal('searchFilterModal');
         }
     });
 }

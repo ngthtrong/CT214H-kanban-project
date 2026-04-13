@@ -34,6 +34,7 @@ define('UPLOAD_MAX_SIZE', 5 * 1024 * 1024); // 5MB
 define('UPLOAD_ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 define('AVATAR_PATH', APP_ROOT . '/uploads/avatars/');
 define('ATTACHMENT_PATH', APP_ROOT . '/uploads/attachments/');
+define('TASK_MAX_ATTACHMENTS', 5);
 
 // Password requirements
 define('PASSWORD_MIN_LENGTH', 6);
