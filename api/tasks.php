@@ -8,6 +8,8 @@
  * GET    /api/tasks.php?project_id={id}&archived=1   - Get archived tasks for project
  * GET    /api/tasks.php?project_id={id}&search=...   - Search/filter tasks with pagination
  * GET    /api/tasks.php?project_id={id}&filters=1    - Get filter options
+ * GET    /api/tasks.php?global=1                      - Search/filter tasks across all user's projects
+ * GET    /api/tasks.php?global=1&filters=1            - Get global filter options
  * GET    /api/tasks.php?id={id}                      - Get single task
  * POST   /api/tasks.php                              - Create task
  * PUT    /api/tasks.php?id={id}                      - Update task
@@ -60,6 +62,33 @@ function handleGet(int $userId): void
         $taskId = (int) $_GET['id'];
         $result = taskGet($taskId, $userId);
         jsonResponse($result, $result['success'] ? 200 : 404);
+    }
+
+    // Global search/filter across all projects user can access
+    if (isset($_GET['global'])) {
+        if (isset($_GET['filters'])) {
+            $result = searchGetGlobalFilterOptions($userId);
+            jsonResponse($result, $result['success'] ? 200 : 403);
+        }
+
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'project_id' => $_GET['project_id'] ?? '',
+            'status' => $_GET['status'] ?? '',
+            'priority' => $_GET['priority'] ?? '',
+            'assigned_to' => $_GET['assigned_to'] ?? '',
+            'due_date_from' => $_GET['due_date_from'] ?? '',
+            'due_date_to' => $_GET['due_date_to'] ?? '',
+            'overdue' => isset($_GET['overdue']),
+            'due_this_week' => isset($_GET['due_this_week']),
+            'sort_by' => $_GET['sort_by'] ?? 'updated_at',
+            'sort_dir' => $_GET['sort_dir'] ?? 'desc',
+            'page' => $_GET['page'] ?? 1,
+            'per_page' => $_GET['per_page'] ?? ITEMS_PER_PAGE
+        ];
+
+        $result = searchUserTasks($userId, $filters);
+        jsonResponse($result, $result['success'] ? 200 : 403);
     }
 
     // Get all tasks for project
