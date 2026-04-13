@@ -68,9 +68,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             
             <div class="project-header-right">
-                <button class="btn btn-outline" data-modal-open="searchFilterModal">
-                    Tìm kiếm & Lọc
-                </button>
                 <button class="btn btn-outline" id="viewArchivedTasksBtn" data-modal-open="archivedTasksModal">
                     Task đã lưu trữ
                 </button>
@@ -85,9 +82,74 @@ require_once __DIR__ . '/includes/header.php';
                         Lưu trữ dự án
                     </button>
                 <?php endif; ?>
-                <button class="btn btn-primary" data-modal-open="createTaskModal">
-                    Tạo task mới
-                </button>
+                <?php if ($isOwner): ?>
+                    <button class="btn btn-primary" data-modal-open="createTaskModal">
+                        Tạo task mới
+                    </button>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="search-filter-bar" id="taskSearchFilterBar">
+            <div class="search-filter-row">
+                <div class="search-box">
+                    <label for="search_text" class="form-hint">Tìm kiếm task</label>
+                    <input type="text" id="search_text" class="form-control"
+                           placeholder="Tìm trong tiêu đề và mô tả...">
+                </div>
+
+                <div class="filter-select">
+                    <label for="filter_status" class="form-hint">Trạng thái</label>
+                    <select id="filter_status" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+
+                <div class="filter-select">
+                    <label for="filter_priority" class="form-hint">Độ ưu tiên</label>
+                    <select id="filter_priority" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="low">Thấp</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="high">Cao</option>
+                    </select>
+                </div>
+
+                <div class="filter-select">
+                    <label for="filter_assigned" class="form-hint">Người thực hiện</label>
+                    <select id="filter_assigned" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="me">Tôi</option>
+                        <option value="unassigned">Chưa gán</option>
+                        <!-- Members loaded by JS -->
+                    </select>
+                </div>
+
+                <div class="filter-select">
+                    <label for="filter_sort_by" class="form-hint">Sắp xếp theo</label>
+                    <select id="filter_sort_by" class="form-control" data-default="priority">
+                        <option value="priority" selected>Độ ưu tiên</option>
+                        <option value="due_date">Hạn hoàn thành</option>
+                        <option value="created_at">Ngày tạo</option>
+                        <option value="task_title">Tiêu đề</option>
+                    </select>
+                </div>
+
+                <div class="filter-select">
+                    <label for="filter_sort_dir" class="form-hint">Thứ tự</label>
+                    <select id="filter_sort_dir" class="form-control" data-default="desc">
+                        <option value="desc" selected>Giảm dần</option>
+                        <option value="asc">Tăng dần</option>
+                    </select>
+                </div>
+
+                <div class="filter-select" style="display:flex; align-items:flex-end; gap: .5rem;">
+                    <button type="button" class="btn btn-secondary" id="clearFiltersBtn">Xóa bộ lọc</button>
+                    <button type="button" class="btn btn-primary" id="applyFiltersBtn">Áp dụng</button>
+                </div>
             </div>
         </div>
 
@@ -138,6 +200,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<?php if ($isOwner): ?>
 <!-- Create Task Modal -->
 <div id="createTaskModal" class="modal-backdrop">
     <div class="modal modal-large">
@@ -192,7 +255,7 @@ require_once __DIR__ . '/includes/header.php';
                     
                     <div class="form-group">
                         <label for="due_date">Hạn hoàn thành</label>
-                        <input type="date" id="due_date" name="due_date" class="form-control">
+                        <input type="date" id="due_date" name="due_date" class="form-control" min="<?= date('Y-m-d') ?>">
                     </div>
                 </div>
             </div>
@@ -203,6 +266,7 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Task Detail Modal -->
 <div id="taskDetailModal" class="modal-backdrop">
@@ -276,7 +340,7 @@ require_once __DIR__ . '/includes/header.php';
                     
                     <div class="form-group">
                         <label for="edit_due_date">Hạn hoàn thành</label>
-                        <input type="date" id="edit_due_date" name="due_date" class="form-control">
+                        <input type="date" id="edit_due_date" name="due_date" class="form-control" min="<?= date('Y-m-d') ?>">
                     </div>
                 </div>
                 
@@ -286,11 +350,11 @@ require_once __DIR__ . '/includes/header.php';
                         <!-- Attachment UI will be loaded here -->
                     </div>
                     <input type="file" id="edit_attachment_upload" style="display: none;" 
-                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" multiple>
                     <button type="button" class="btn btn-outline btn-sm" id="uploadAttachmentBtn">
                         Upload file
                     </button>
-                    <small class="form-hint">Chấp nhận: JPG, PNG, PDF, DOC, DOCX (tối đa 5MB)</small>
+                    <small class="form-hint">Chấp nhận: JPG, PNG, PDF, DOC, DOCX (tối đa 5 file/task, mỗi file tối đa 5MB)</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -298,58 +362,6 @@ require_once __DIR__ . '/includes/header.php';
                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
             </div>
         </form>
-    </div>
-</div>
-
-<!-- Search & Filter Modal -->
-<div id="searchFilterModal" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 class="modal-title">Tìm kiếm & Lọc</h3>
-            <button type="button" class="modal-close" data-modal-close>&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="search_text">Tìm kiếm</label>
-                <input type="text" id="search_text" class="form-control" 
-                       placeholder="Tìm trong tiêu đề và mô tả...">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="filter_status">Trạng thái</label>
-                    <select id="filter_status" class="form-control">
-                        <option value="">Tất cả</option>
-                        <option value="todo">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="done">Done</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="filter_priority">Độ ưu tiên</label>
-                    <select id="filter_priority" class="form-control">
-                        <option value="">Tất cả</option>
-                        <option value="low">Thấp</option>
-                        <option value="medium">Trung bình</option>
-                        <option value="high">Cao</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="filter_assigned">Người thực hiện</label>
-                <select id="filter_assigned" class="form-control">
-                    <option value="">Tất cả</option>
-                    <option value="unassigned">Chưa gán</option>
-                    <!-- Members loaded by JS -->
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="clearFiltersBtn">Xóa bộ lọc</button>
-            <button type="button" class="btn btn-primary" id="applyFiltersBtn">Áp dụng</button>
-        </div>
     </div>
 </div>
 
@@ -379,6 +391,6 @@ const CURRENT_USER_ID = <?= $userId ?>;
 const PROJECT_NAME = <?= json_encode($project['project_name'], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 
-<script type="module" src="<?= asset('js/kanban.js') ?>"></script>
+<script type="module" src="<?= assetVersioned('js/kanban.js') ?>"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -3,6 +3,7 @@
  */
 
 let draggedTaskId = null;
+let suppressClickUntil = 0;
 
 function clearDropZones() {
     document.querySelectorAll('.kanban-column-body').forEach((column) => {
@@ -11,13 +12,13 @@ function clearDropZones() {
 }
 
 function bindTaskCards(columnBody) {
-    const handlers = columnBody.__kanbanDragDropHandlers || {};
     const taskCards = columnBody.querySelectorAll('.task-card');
 
     taskCards.forEach((card) => {
         card.addEventListener('dragstart', (event) => {
             draggedTaskId = card.dataset.taskId;
             card.classList.add('dragging');
+            suppressClickUntil = Date.now() + 250;
 
             if (event.dataTransfer) {
                 event.dataTransfer.effectAllowed = 'move';
@@ -28,18 +29,37 @@ function bindTaskCards(columnBody) {
         card.addEventListener('dragend', () => {
             card.classList.remove('dragging');
             draggedTaskId = null;
+            suppressClickUntil = Date.now() + 250;
             clearDropZones();
         });
+    });
+}
 
-        card.addEventListener('click', (event) => {
-            if (!event.target.closest('.task-card-title')) {
-                return;
-            }
+function bindTaskDoubleClicks(columnBody) {
+    if (columnBody.dataset.taskDoubleClickBound === '1') {
+        return;
+    }
 
-            if (typeof handlers.onTaskClick === 'function') {
-                handlers.onTaskClick(card.dataset.taskId);
-            }
-        });
+    columnBody.dataset.taskDoubleClickBound = '1';
+
+    columnBody.addEventListener('dblclick', (event) => {
+        if (Date.now() < suppressClickUntil) {
+            return;
+        }
+
+        if (event.target.closest('button, a, input, select, textarea, [data-no-open-task]')) {
+            return;
+        }
+
+        const card = event.target.closest('.task-card');
+        if (!card || !columnBody.contains(card)) {
+            return;
+        }
+
+        const handlers = columnBody.__kanbanDragDropHandlers || {};
+        if (typeof handlers.onTaskClick === 'function') {
+            handlers.onTaskClick(card.dataset.taskId);
+        }
     });
 }
 
@@ -93,6 +113,7 @@ export function bindColumnDragDrop(columnBody, handlers = {}) {
 
     columnBody.__kanbanDragDropHandlers = handlers;
     bindDropZone(columnBody);
+    bindTaskDoubleClicks(columnBody);
     bindTaskCards(columnBody);
 }
 
