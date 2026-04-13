@@ -511,6 +511,244 @@ function taskIsOwner(int $projectId, int $userId): bool
     return $result !== null;
 }
 
+function _taskBuildSearchOrderClause(string $sortBy, string $sortDir): string
+{
+    $direction = strtolower($sortDir) === 'asc' ? 'ASC' : 'DESC';
+
+    switch ($sortBy) {
+        case 'due_date':
+            return '(t.due_date IS NULL) ASC, t.due_date ' . $direction . ', t.updated_at DESC';
+        case 'created_at':
+            return 't.created_at ' . $direction . ', t.updated_at DESC';
+        case 'updated_at':
+            return 't.updated_at ' . $direction;
+        case 'task_title':
+            return 't.task_title ' . $direction . ', t.updated_at DESC';
+        case 'project_name':
+            return 'p.project_name ' . $direction . ', t.updated_at DESC';
+        case 'priority':
+        default:
+            return 'CASE t.priority WHEN "low" THEN 1 WHEN "medium" THEN 2 WHEN "high" THEN 3 ELSE 0 END ' . $direction . ', t.updated_at DESC';
+    }
+}
+
+function searchUserTasks(int $userId, array $filters = []): array
+{
+    $conditions = ['pm.user_id = ?', 'p.is_archived = 0', 't.is_archived = 0'];
+    $params = [$userId];
+
+    if (!empty($filters['search'])) {
+        $searchTerm = '%' . $filters['search'] . '%';
+        $conditions[] = '(t.task_title LIKE ? OR t.description LIKE ? OR p.project_name LIKE ?)';
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+    }
+
+    if (!empty($filters['project_id']) && is_numeric($filters['project_id'])) {
+        $conditions[] = 't.project_id = ?';
+        $params[] = (int) $filters['project_id'];
+    }
+
+    if (!empty($filters['status']) && in_array($filters['status'], ['todo', 'in_progress', 'done'], true)) {
+        $conditions[] = 't.column_status = ?';
+        $params[] = $filters['status'];
+    }
+
+    if (!empty($filters['priority']) && in_array($filters['priority'], ['low', 'medium', 'high'], true)) {
+        $conditions[] = 't.priority = ?';
+        $params[] = $filters['priority'];
+    }
+
+    if (array_key_exists('assigned_to', $filters)) {
+        $assignedFilter = $filters['assigned_to'];
+
+        if ($assignedFilter === 'unassigned') {
+            $conditions[] = 't.assigned_to IS NULL';
+        } elseif ($assignedFilter === 'me') {
+            $conditions[] = 't.assigned_to = ?';
+            $params[] = $userId;
+        } elseif ($assignedFilter !== '' && $assignedFilter !== null && is_numeric($assignedFilter)) {
+            $conditions[] = 't.assigned_to = ?';
+            $params[] = (int) $assignedFilter;
+        }
+    }
+
+    if (!empty($filters['due_date_from'])) {
+        $conditions[] = 't.due_date >= ?';
+        $params[] = date('Y-m-d', strtotime($filters['due_date_from']));
+    }
+
+    if (!empty($filters['due_date_to'])) {
+        $conditions[] = 't.due_date <= ?';
+        $params[] = date('Y-m-d', strtotime($filters['due_date_to']));
+    }
+
+    if (!empty($filters['overdue'])) {
+        $conditions[] = 't.due_date < CURDATE() AND t.column_status != ?';
+        $params[] = 'done';
+    }
+
+    if (!empty($filters['due_this_week'])) {
+        $conditions[] = 't.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)';
+    }
+
+    $whereClause = implode(' AND ', $conditions);
+
+    $totalResult = dbQueryOne(
+        'SELECT COUNT(*) as total
+         FROM tasks t
+         JOIN projects p ON p.project_id = t.project_id
+         JOIN project_members pm ON pm.project_id = t.project_id
+         WHERE ' . $whereClause,
+        $params
+    );
+    $total = (int) ($totalResult['total'] ?? 0);
+
+    $projectCountResult = dbQueryOne(
+        'SELECT COUNT(DISTINCT t.project_id) as total_projects
+         FROM tasks t
+         JOIN projects p ON p.project_id = t.project_id
+         JOIN project_members pm ON pm.project_id = t.project_id
+         WHERE ' . $whereClause,
+        $params
+    );
+    $totalProjects = (int) ($projectCountResult['total_projects'] ?? 0);
+
+    $page = max(1, (int) ($filters['page'] ?? 1));
+    $perPage = min(100, max(1, (int) ($filters['per_page'] ?? ITEMS_PER_PAGE)));
+    $offset = ($page - 1) * $perPage;
+    $totalPages = (int) ceil($total / $perPage);
+
+    $orderBy = _taskBuildSearchOrderClause(
+        (string) ($filters['sort_by'] ?? 'updated_at'),
+        (string) ($filters['sort_dir'] ?? 'desc')
+    );
+
+    $sql = 'SELECT t.*, u.username as assigned_username, u.full_name as assigned_name, u.avatar as assigned_avatar,
+                   p.project_name, p.project_code
+            FROM tasks t
+            JOIN projects p ON p.project_id = t.project_id
+            JOIN project_members pm ON pm.project_id = t.project_id
+            LEFT JOIN users u ON t.assigned_to = u.user_id
+            WHERE ' . $whereClause . '
+            ORDER BY ' . $orderBy . '
+            LIMIT ' . $perPage . ' OFFSET ' . $offset;
+
+    $tasks = dbQuery($sql, $params);
+
+    $groupedMap = [];
+    foreach ($tasks as &$task) {
+        $task['assignee_name'] = $task['assigned_name'] ?? null;
+
+        $projectId = (int) $task['project_id'];
+        if (!isset($groupedMap[$projectId])) {
+            $groupedMap[$projectId] = [
+                'project_id' => $projectId,
+                'project_name' => $task['project_name'] ?? '',
+                'project_code' => $task['project_code'] ?? '',
+                'task_count' => 0,
+                'tasks' => []
+            ];
+        }
+
+        $groupedMap[$projectId]['tasks'][] = $task;
+        $groupedMap[$projectId]['task_count']++;
+    }
+
+    return [
+        'success' => true,
+        'data' => [
+            'tasks' => $tasks,
+            'grouped_by_project' => array_values($groupedMap),
+            'summary' => [
+                'total_tasks' => $total,
+                'project_count' => $totalProjects
+            ],
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total_items' => $total,
+                'total_pages' => $totalPages,
+                'has_prev' => $page > 1,
+                'has_next' => $page < $totalPages
+            ],
+            'filters' => $filters
+        ]
+    ];
+}
+
+function searchGetGlobalFilterOptions(int $userId): array
+{
+    $projects = dbQuery(
+        'SELECT p.project_id, p.project_name, p.project_code
+         FROM projects p
+         JOIN project_members pm ON pm.project_id = p.project_id
+         WHERE pm.user_id = ? AND p.is_archived = 0
+         ORDER BY p.project_name ASC',
+        [$userId]
+    );
+
+    $members = dbQuery(
+        'SELECT DISTINCT u.user_id, u.username, u.full_name
+         FROM project_members pm_me
+         JOIN project_members pm ON pm.project_id = pm_me.project_id
+         JOIN projects p ON p.project_id = pm.project_id
+         JOIN users u ON u.user_id = pm.user_id
+         WHERE pm_me.user_id = ? AND p.is_archived = 0
+         ORDER BY u.full_name ASC',
+        [$userId]
+    );
+
+    $statusCounts = dbQuery(
+        'SELECT t.column_status, COUNT(*) as count
+         FROM tasks t
+         JOIN projects p ON p.project_id = t.project_id
+         JOIN project_members pm ON pm.project_id = t.project_id
+         WHERE pm.user_id = ? AND p.is_archived = 0 AND t.is_archived = 0
+         GROUP BY t.column_status',
+        [$userId]
+    );
+
+    $statusMap = [];
+    foreach ($statusCounts as $row) {
+        $statusMap[$row['column_status']] = (int) $row['count'];
+    }
+
+    $priorityCounts = dbQuery(
+        'SELECT t.priority, COUNT(*) as count
+         FROM tasks t
+         JOIN projects p ON p.project_id = t.project_id
+         JOIN project_members pm ON pm.project_id = t.project_id
+         WHERE pm.user_id = ? AND p.is_archived = 0 AND t.is_archived = 0
+         GROUP BY t.priority',
+        [$userId]
+    );
+
+    $priorityMap = [];
+    foreach ($priorityCounts as $row) {
+        $priorityMap[$row['priority']] = (int) $row['count'];
+    }
+
+    return [
+        'success' => true,
+        'data' => [
+            'projects' => $projects,
+            'members' => $members,
+            'statuses' => [
+                ['value' => 'todo', 'label' => 'To Do', 'count' => $statusMap['todo'] ?? 0],
+                ['value' => 'in_progress', 'label' => 'In Progress', 'count' => $statusMap['in_progress'] ?? 0],
+                ['value' => 'done', 'label' => 'Done', 'count' => $statusMap['done'] ?? 0]
+            ],
+            'priorities' => [
+                ['value' => 'high', 'label' => 'Cao', 'count' => $priorityMap['high'] ?? 0],
+                ['value' => 'medium', 'label' => 'Trung binh', 'count' => $priorityMap['medium'] ?? 0],
+                ['value' => 'low', 'label' => 'Thap', 'count' => $priorityMap['low'] ?? 0]
+            ]
+        ]
+    ];
+}
+
 /**
  * Search/filter tasks in a project
  */
