@@ -473,12 +473,14 @@ function searchProjectTasks(int $projectId, int $userId, array $filters = []): a
         $params[] = $filters['priority'];
     }
 
-    if (isset($filters['assigned_to'])) {
-        if ($filters['assigned_to'] === '' || $filters['assigned_to'] === 'unassigned') {
+    if (array_key_exists('assigned_to', $filters)) {
+        $assignedFilter = $filters['assigned_to'];
+
+        if ($assignedFilter === 'unassigned') {
             $conditions[] = 't.assigned_to IS NULL';
-        } elseif (is_numeric($filters['assigned_to'])) {
+        } elseif ($assignedFilter !== '' && $assignedFilter !== null && is_numeric($assignedFilter)) {
             $conditions[] = 't.assigned_to = ?';
-            $params[] = (int) $filters['assigned_to'];
+            $params[] = (int) $assignedFilter;
         }
     }
 
