@@ -1,4 +1,5 @@
 'use strict';
+// initGlobalSearchHub, collectFilters, performSearch
 
 const SEARCH_PER_PAGE = 20;
 

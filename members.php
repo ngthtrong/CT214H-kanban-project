@@ -42,7 +42,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </div>
 </div>
-
+<!-- 
 <?php if ($isOwner): ?>
 <div class="card" style="margin-bottom: 1rem;">
     <div class="card-body">
@@ -51,7 +51,7 @@ require_once __DIR__ . '/includes/header.php';
         </p>
     </div>
 </div>
-<?php endif; ?>
+<?php endif; ?> -->
 
 <div class="card">
     <div class="card-body">
